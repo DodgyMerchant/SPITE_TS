@@ -76,7 +76,7 @@ export class Player extends Phaser.GameObjects.Sprite {
     // console.log("Player pre update");
   }
 
-  update(...args: any[]): void {
+  update(): void {
     // console.log("Player update");
   }
 }
