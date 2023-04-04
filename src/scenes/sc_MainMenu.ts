@@ -18,7 +18,7 @@ export default class sc_MainMenu extends sc_MyScene {
   create() {
     super.create();
 
-    this.scene.start(gameManager.SceneAdd("sc_Game", sc_Game));
+    this.scene.start(gameManager.SceneUniqueAdd(sc_Game));
   }
 
   update(time: number, delta: number): void {
