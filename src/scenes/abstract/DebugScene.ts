@@ -1,12 +1,19 @@
+import { GameManager } from "../../main";
+
 /**
  * Debug Scene.
  * handles debug scene for displaying.
  */
 export class DebugScene extends Phaser.Scene {
+  /**
+   *
+   */
+  targetScene: Phaser.Scene | undefined;
   textObj: Phaser.GameObjects.Text | undefined;
   displayText = new Array<string>();
   inputkey: Phaser.Input.Keyboard.Key | undefined;
-  graph: Phaser.GameObjects.Graphics | undefined;
+  /** graphics in game scene */
+  gameGraph: Phaser.GameObjects.Graphics | undefined;
   /**
    * scene key
    */
@@ -40,12 +47,14 @@ export class DebugScene extends Phaser.Scene {
   create() {
     this.textObj = this.add.text(0, 0, "DEBUG", { color: "#00ff00", font: "16px Courier" });
     this.inputkey = this.input.keyboard.addKey("J", true, false);
-    this.graph = this.add.graphics({
+
+    this.gameGraph = this.add.graphics({
       x: 0,
       y: 0,
-      fillStyle: { color: Phaser.Display.Color.GetColor32(255, 0, 0, 255) },
-      lineStyle: { color: Phaser.Display.Color.GetColor32(255, 0, 0, 255), width: 1 },
+      fillStyle: { color: Phaser.Display.Color.GetColor(255, 0, 0), alpha: 0.5 },
+      lineStyle: { color: Phaser.Display.Color.GetColor(255, 0, 0), alpha: 0.5, width: 1 },
     });
+    this.targetScene = this;
   }
 
   update(): void {
@@ -76,5 +85,21 @@ export class DebugScene extends Phaser.Scene {
    */
   AddText(texts: string[]): void {
     this.displayText.push(...texts);
+  }
+
+  /**
+   * targets a scene for debugging.
+   * Moves debugging objects and features to the scene and initializes stuff.
+   * @param scene scene to move to
+   */
+  TargetScene(scene: Phaser.Scene) {
+    if (this.targetScene && this.gameGraph) {
+      //game graph
+      GameManager.GmObj.Move.Move(this.targetScene, scene, this.gameGraph);
+      this.gameGraph.setVisible(true);
+      this.gameGraph.setActive(true);
+
+      this.targetScene = scene;
+    } else console.error("DEBUG obj bad initililization or not done", this.targetScene);
   }
 }

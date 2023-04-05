@@ -1,3 +1,5 @@
+import { GameManager, gameManager } from "../main";
+
 interface int_STATES {
   [i: string]: int_STATE;
 }
@@ -74,9 +76,13 @@ export class Player extends Phaser.GameObjects.Sprite {
 
   protected preUpdate(time: number, delta: number): void {
     // console.log("Player pre update");
+
+    //updates internal animations???????????????
+    this.anims.update(time, delta);
   }
 
   update(): void {
     // console.log("Player update");
+
   }
 }

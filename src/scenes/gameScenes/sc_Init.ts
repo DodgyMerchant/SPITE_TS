@@ -1,4 +1,4 @@
-import { gameManager } from "../../main";
+import { GameManager, gameManager } from "../../main";
 import sc_MainMenu from "./sc_MainMenu";
 import { sc_MyScene } from "../abstract/sc_MyScene";
 
@@ -26,7 +26,7 @@ export default class sc_Init extends sc_MyScene {
 
     this.load.image("img_player_idle_stand", "player/idle/img_player_idle_stand.png");
 
-    gameManager.Load.strip(
+    GameManager.Load.strip(
       this,
       {
         key: "sheet_player_idle_idle",
@@ -48,7 +48,7 @@ export default class sc_Init extends sc_MyScene {
     // const { width, height } = this.scale;
     // this.add.image(width * 0.5, height * 0.5, "mapImg");
 
-    this.scene.start(gameManager.Scene.UniqueAdd(this.scene,sc_MainMenu));
+    this.scene.start(GameManager.Scene.UniqueAdd(this.scene,sc_MainMenu));
   }
 
   update(): void {

@@ -48,10 +48,11 @@ export abstract class sc_MyScene extends Phaser.Scene {
       runChildUpdate: true,
     });
 
-    
     //debug
     //bring debug scene to top
     this.scene.bringToTop(this.DEBUG.key);
+
+    this.DEBUG.TargetScene(this);
 
     // console.log(this.events.eventNames());
   }

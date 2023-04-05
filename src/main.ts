@@ -1,4 +1,4 @@
-import Phaser from "phaser";
+import Phaser, { Game } from "phaser";
 import sc_Init from "./scenes/gameScenes/sc_Init";
 import { DebugScene } from "./scenes/abstract/DebugScene";
 import { sc_MyScene } from "./scenes/abstract/sc_MyScene";
@@ -64,7 +64,7 @@ export class GameManager {
   /**
    * Phaser Scene utility bundle.
    */
-  Scene = {
+  static Scene = {
     /**
      * Creates scene and/or adds it to update group.
      * If scene not present in system creates scene.
@@ -91,7 +91,7 @@ export class GameManager {
   /**
    * Phaser Loading utility bundle.
    */
-  Load = {
+  static Load = {
     /**
      * WIP
      */
@@ -116,35 +116,150 @@ export class GameManager {
   /**
    * Phaser Game Object utility bundle.
    */
-  GameObject = {
+  static GmObj = {
     /**
-     * adds an object to the update group.
-     * Optionally adds it to the scene.
-     * @param scene game scene to reference.
-     * @param child GameObject to add.
-     * @param addToScene if it should be added to scenen.
-     * @returns game object instance
+     * check if the given object is contained in the scenes update list.
+     * IMPORTANT: If an Object was just added to a scene the object might still be in processing and this function will return a false negative!!!
+     * There is no way of cleanly checking if an object is still in processing because the Display List Processing List is for some fucking reason a hidden property.
+     * @param scene
+     * @param child
+     * @returns boolean true if exits
      */
-    AddUpdate<T extends Phaser.GameObjects.GameObject>(scene: sc_MyScene, child: T, addToScene: boolean | undefined): T {
-      scene.GroupAlive?.add(child, addToScene);
-      return child;
+    UpdateCheck<T extends Phaser.GameObjects.GameObject>(scene: Phaser.Scene, child: T): boolean {
+      return scene.sys.updateList.getActive().includes(child);
     },
 
     /**
-     * adds an GameObject INstance to the scene and adds it to the update group.
-     * @param scene game scene to reference.
-     * @param child GameObject to add.
-     * @returns game object instance
+     * check if the given object is contained in the scenes display list.
+     * @param scene
+     * @param child
+     * @returns boolean true if exits
      */
-    Add<T extends Phaser.GameObjects.GameObject>(scene: sc_MyScene, child: T) {
-      return this.AddUpdate(scene, child, true);
+    DisplayCheck<T extends Phaser.GameObjects.GameObject>(scene: Phaser.Scene, child: T): boolean {
+      return scene.children.exists(child);
+    },
+
+    /** adding an GameObject to a scene and scene properties */
+    Add: {
+      /**
+       * Adds existing game object to the scene.
+       * Sets all necessery variables and adds it to all lists.
+       * @param scene
+       * @param child
+       * @returns child
+       */
+      Add<T extends Phaser.GameObjects.GameObject>(scene: Phaser.Scene, child: T): T {
+        scene.add.existing(child);
+
+        if (child.scene != scene) child.scene = scene;
+
+        return child;
+      },
+      /**
+       * adds an object to the update group.
+       * Optionally adds it to the scene.
+       * @param scene game scene to reference.
+       * @param child GameObject to add.
+       * @param addToScene if it should be added to scenen.
+       * @returns game object instance
+       */
+      ActivateUpdate<T extends Phaser.GameObjects.GameObject>(scene: sc_MyScene, child: T, addToScene: boolean | undefined): T {
+        scene.GroupAlive?.add(child, false);
+
+        if (addToScene) {
+          this.Add(scene, child);
+        }
+
+        return child;
+      },
+
+      /**
+       * adds an GameObject Instance to the scene and adds it to the update group.
+       * @param scene game scene to reference.
+       * @param child GameObject to add.
+       * @returns game object instance
+       */
+      AddnUpdate<T extends Phaser.GameObjects.GameObject>(scene: sc_MyScene, child: T) {
+        return this.ActivateUpdate(scene, child, true);
+      },
+    },
+
+    /**
+     * removing an GameObject from a scene and scene properties.
+     * Note that removing an object from a scene or its systems may automatically set the associated booleans to false.
+     * This is stupid and mentioned no where.
+     *
+     * Known cases of this are:
+     * Removing from display list -> visible = false;
+     * Removing from update list -> active = false
+     *
+     * MIght also be because im getting an object from a disabled scene?????
+     * Need to check
+     */
+    Remove: {
+      /**
+       * remove child from the scene completely.
+       * @param scene
+       * @param child child to remove
+       * @param skipCallback Skip calling the List.removeCallback. Default false.
+       * @returns child
+       */
+      Remove<T extends Phaser.GameObjects.GameObject>(scene: Phaser.Scene, child: T, skipCallback?: boolean | undefined): T {
+        //display list
+        if (GameManager.GmObj.DisplayCheck(scene, child)) this.RemoveDisp(scene, child, skipCallback);
+        //update list
+        if (GameManager.GmObj.UpdateCheck(scene, child)) this.RemoveUpdate(scene, child);
+
+        return child;
+      },
+
+      /**
+       * remove Game object from scene display list.
+       * @param scene
+       * @param child child to remove
+       * @param skipCallback Skip calling the List.removeCallback. Default false.
+       * @returns child
+       */
+      RemoveDisp<T extends Phaser.GameObjects.GameObject>(scene: Phaser.Scene, child: T, skipCallback?: boolean | undefined): T {
+        scene.children.remove(child, skipCallback);
+        return child;
+      },
+
+      /**
+       * remove Game object from scene update list.
+       * @param scene
+       * @param child child to remove
+       * @param skipCallback Skip calling the List.removeCallback. Default false.
+       * @returns child
+       */
+      RemoveUpdate<T extends Phaser.GameObjects.GameObject>(scene: Phaser.Scene, child: T): T {
+        scene.sys.updateList.remove(child);
+        return child;
+      },
+    },
+
+    /** moving GameObjects between scenes */
+    Move: {
+      /**
+       * Moves a child GameObject from one scene to the other
+       * @param fromScene scene to remove GameObject from.
+       * @param toScene scene to add GameObject to.
+       * @param child child to move.
+       * @returns child.
+       */
+      Move<T extends Phaser.GameObjects.GameObject>(fromScene: Phaser.Scene, toScene: Phaser.Scene, child: T): T {
+        GameManager.GmObj.Remove.Remove(fromScene, child);
+        GameManager.GmObj.Add.Add(toScene, child);
+
+        return child;
+      },
     },
   };
 
   /**
    * Phaser Camera utility bundle.
    */
-  Camera = {
+  static Camera = {
     /**
      * sets tthe cameras world view to the given width and heigth values.
      * @param camera camera to set view.
@@ -154,6 +269,28 @@ export class GameManager {
      */
     SetViewSize(camera: Phaser.Cameras.Scene2D.Camera, width: number, height: number = width): Phaser.Cameras.Scene2D.Camera {
       return camera.setZoom(camera.width / width, camera.height / height);
+    },
+
+    /**
+     * sets the given cameras top left position in the game world.
+     * @param camera camera to edit.
+     * @param x x coordinate of the top left position of the camera in the game world.
+     * @param y y coordinate of the top left position of the camera in the game world.
+     * @returns the camera.
+     */
+    SetPosition(camera: Phaser.Cameras.Scene2D.Camera, x: number, y: number) {
+      return camera.setPosition(x, y);
+    },
+
+    /**
+     * sets the given cameras center position in the game world.
+     * @param camera camera to edit.
+     * @param x x coordinate of the center of the camera in the game world.
+     * @param y y coordinate of the center of the camera in the game world.
+     * @returns the camera.
+     */
+    SetCenter(camera: Phaser.Cameras.Scene2D.Camera, x: number, y: number) {
+      return camera.centerOn(x, y);
     },
   };
 }

@@ -1,5 +1,5 @@
 import { Player } from "../../gameObj/player";
-import { gameManager } from "../../main";
+import { GameManager, gameManager } from "../../main";
 import { sc_MyScene } from "../abstract/sc_MyScene";
 
 export default class sc_Game extends sc_MyScene {
@@ -24,12 +24,18 @@ export default class sc_Game extends sc_MyScene {
 
     let { width, height } = this.scale;
 
-    this.player = gameManager.GameObject.Add(this, new Player(this, width * 0.5, height * 0.5, ""));
+    this.player = GameManager.GmObj.Add.AddnUpdate(this, new Player(this, width * 0.5, height * 0.5, ""));
     this.player.play("an_player_idle_idle");
 
     // let cent = this.player.getCenter();
 
     // this.cameras.main.
+
+    // gameManager.Camera.SetViewSize(this.cameras.main, 50,50);
+
+    this.DEBUG.gameGraph?.strokeRectShape(this.player.getBounds());
+
+    console.log("log: this.DEBUG.gameGraph: ");
   }
 
   update(time: number, delta: number): void {
