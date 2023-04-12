@@ -1,4 +1,4 @@
-import { GameManager, gameManager } from "../../main";
+import { MyGameManager as MGM, gameManager } from "../../main";
 import sc_MainMenu from "./sc_MainMenu";
 import { sc_MyScene } from "../abstract/sc_MyScene";
 
@@ -26,20 +26,19 @@ export default class sc_Init extends sc_MyScene {
 
     this.load.image("img_player_idle_stand", "player/idle/img_player_idle_stand.png");
 
-    GameManager.Load.strip(
+    MGM.Load.strip(
       this,
       {
         key: "sheet_player_idle_idle",
         url: "player/idle/spr_player_idle_idle.png",
-        frameConfig: { frameWidth: 16 },
+        frameConfig: { frameWidth: 16, frameHeight: 22 },
       },
       {
         key: "an_player_idle_idle",
-        // frames: "sheet_player_idle_idle",
-        frameRate: 8,
+        frameRate: 1,
         repeat: -1,
-      },
-      { frames: [0, 1, 2] }
+        yoyo: true,
+      }
     );
   }
 
@@ -48,7 +47,7 @@ export default class sc_Init extends sc_MyScene {
     // const { width, height } = this.scale;
     // this.add.image(width * 0.5, height * 0.5, "mapImg");
 
-    this.scene.start(GameManager.Scene.UniqueAdd(this.scene,sc_MainMenu));
+    this.scene.start(MGM.Scene.UniqueAdd(this.scene, sc_MainMenu));
   }
 
   update(): void {

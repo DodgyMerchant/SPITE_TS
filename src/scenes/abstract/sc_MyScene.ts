@@ -1,4 +1,4 @@
-import { GameManager } from "../../main";
+import { GameManager, MyGameManager as MGM } from "../../main";
 import { DebugScene } from "./DebugScene";
 
 /**
@@ -61,6 +61,9 @@ export abstract class sc_MyScene extends Phaser.Scene {
     //#region debug
     var pointer = this.input.activePointer;
 
+    let mainCam = this.cameras.main;
+    let mgmCv = MGM.Camera.View;
+
     this.DEBUG?.AddText([
       "Mouse/////////////",
       "x: " + pointer.x,
@@ -75,21 +78,26 @@ export abstract class sc_MyScene extends Phaser.Scene {
       "Scene////////////",
       "name: " + this.scene.key,
       "visible: " + this.scene.isVisible(this),
-      "",
+      "delta: " + delta.toFixed(2),
       "Camera main////////////",
-      "visible: " + this.cameras.main.visible,
-      "transparent: " + this.cameras.main.transparent,
-      "port x/y: " + this.cameras.main.x + "/" + this.cameras.main.y,
-      "port w/h: " + this.cameras.main.width + "/" + this.cameras.main.height,
-      "port Disp w/h: " + this.cameras.main.displayWidth + "/" + this.cameras.main.displayHeight,
-      "view x/y: " + this.cameras.main.worldView.x + "/" + this.cameras.main.worldView.y,
-      "view w/h: " + this.cameras.main.worldView.width + "/" + this.cameras.main.worldView.height,
-      "center x/y: " + this.cameras.main.worldView.centerX + "/" + this.cameras.main.worldView.centerY,
+      "visible: " + mainCam.visible,
+      "transparent: " + mainCam.transparent,
+      "",
+      "// port //",
+      "x/y: " + mainCam.x + "/" + mainCam.y,
+      "w/h: " + mainCam.width + "/" + mainCam.height,
+      "cent x/y: " + mainCam.centerX + "/" + mainCam.centerY,
+      "",
+      "// view no zoom //",
+      "x/y: " + mainCam.scrollX + "/" + mainCam.scrollY,
+      "w/h: " + mainCam.width + "/" + mainCam.height,
+      "cen x/y: " + mainCam.worldView.centerX + "/" + mainCam.worldView.centerY,
+      "",
+      "// view + zoom //",
+      "x/y: " + mgmCv.GetX(mainCam) + "/" + mgmCv.GetY(mainCam),
+      "w/h: " + mgmCv.GetWidth(mainCam) + "/" + mgmCv.GetHeight(mainCam),
+      "off w/h: " + mgmCv.GetZoomOffsetX(mainCam) + "/" + mgmCv.GetZoomOffsetY(mainCam),
     ]);
-
-    if (this.DEBUG.inputkey?.isDown) {
-      console.log("getCamerasBelowPointer: ", this.cameras.getCamerasBelowPointer(this.input.activePointer));
-    }
 
     //#endregion debug
   }

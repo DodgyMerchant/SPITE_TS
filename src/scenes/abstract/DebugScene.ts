@@ -1,4 +1,4 @@
-import { GameManager } from "../../main";
+import { MyGameManager as MGM } from "../../main";
 
 /**
  * Debug Scene.
@@ -73,6 +73,7 @@ export class DebugScene extends Phaser.Scene {
     let mc = this.textObj?.scene.cameras.main;
 
     this.textObj?.setText(this.displayText);
+
     if (mc) this.textObj?.setPosition(mc.worldView.x + offx, mc.worldView.y + offy);
 
     //delete all text from array
@@ -95,7 +96,7 @@ export class DebugScene extends Phaser.Scene {
   TargetScene(scene: Phaser.Scene) {
     if (this.targetScene && this.gameGraph) {
       //game graph
-      GameManager.GmObj.Move.Move(this.targetScene, scene, this.gameGraph);
+      MGM.GmObj.Move.Move(this.targetScene, scene, this.gameGraph);
       this.gameGraph.setVisible(true);
       this.gameGraph.setActive(true);
 

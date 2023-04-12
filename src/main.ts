@@ -1,4 +1,4 @@
-import Phaser, { Game } from "phaser";
+import Phaser from "phaser";
 import sc_Init from "./scenes/gameScenes/sc_Init";
 import { DebugScene } from "./scenes/abstract/DebugScene";
 import { sc_MyScene } from "./scenes/abstract/sc_MyScene";
@@ -39,7 +39,8 @@ const config: Phaser.Types.Core.GameConfig = {
 };
 
 /**
- * My Custom Phaser Game Manager CLass.
+ * Phaser Game Manager CLass.
+ * General Phaser Utility
  */
 export class GameManager {
   Game: Phaser.Game;
@@ -90,24 +91,35 @@ export class GameManager {
 
   /**
    * Phaser Loading utility bundle.
+   *
+   * Use only in scene preload method.
    */
   static Load = {
     /**
-     * WIP
+     * create a sprite animation from a image file.
+     * Sheet will be accessible under the given key in the "spriteSheetConfig" object.
+     * Animation will be accessible under the given key in the "animationConfig" object.
+     * @param scene Scene to use.
+     * @param spriteSheetConfig The key to use for this file, or a file configuration object, or array of them.
+     * @param animationConfig The configuration settings for the Animation.  "frames" property will be overwritten by mext parameter.
+     * @param frameConfig The configuration object for the animation frames.  Leave empty to use all frames in strip in default order: left to right.
      */
     strip(
       scene: Phaser.Scene,
       spriteSheetConfig: Phaser.Types.Loader.FileTypes.SpriteSheetFileConfig,
-      animationCOnfig: Phaser.Types.Animations.Animation,
-      frameConfig: Phaser.Types.Animations.GenerateFrameNumbers
+      animationConfig: Phaser.Types.Animations.Animation,
+      frameConfig?: Phaser.Types.Animations.GenerateFrameNumbers
     ) {
       scene.load
         .spritesheet(spriteSheetConfig)
         .on(
-          "filecomplete-spritesheet-sheet_player_idle_idle",
+          "filecomplete-spritesheet-" + spriteSheetConfig.key,
           (fileKey: string, dataType: string, TextureObject: Phaser.Textures.Texture) => {
-            animationCOnfig.frames = scene.anims.generateFrameNumbers(fileKey, frameConfig);
-            scene.anims.create(animationCOnfig);
+            //setting frames
+            if (frameConfig) animationConfig.frames = scene.anims.generateFrameNumbers(fileKey, frameConfig);
+            else animationConfig.frames = fileKey;
+
+            scene.anims.create(animationConfig);
           }
         );
     },
@@ -258,41 +270,116 @@ export class GameManager {
 
   /**
    * Phaser Camera utility bundle.
+   *
+   * Notice for default pahser usage!!
+   *
+   * The camera view port and view, in world view, are weirdly intermingled with each other when it comes to property and function names.
+   * This object solves this by making this shit usables and not confusing as fuck.
+   *
+   * In default phaser the camera is always the size of the port and only the zoom x/y values allow for changes in view width and height.
+   * That meins alot of properties and funktion work with the "default", not zoomed in view.
+   * This is fuckign stupid.
+   *
+   * All funktions here: if it says view it means the zoomed in view.
    */
   static Camera = {
     /**
-     * sets tthe cameras world view to the given width and heigth values.
-     * @param camera camera to set view.
-     * @param width width ofthe wold view.
-     * @param height width ofthe wold view. defaults to width.
-     * @returns edited camera
+     * the actual in world shown view.
+     * With zoom applied and all.
      */
-    SetViewSize(camera: Phaser.Cameras.Scene2D.Camera, width: number, height: number = width): Phaser.Cameras.Scene2D.Camera {
-      return camera.setZoom(camera.width / width, camera.height / height);
-    },
+    View: {
+      /**
+       * sets tthe cameras world view to the given width and heigth values.
+       * @param camera camera to set view.
+       * @param width width ofthe wold view.
+       * @param height width ofthe wold view. defaults to width.
+       * @returns edited camera
+       */
+      SetSize(camera: Phaser.Cameras.Scene2D.Camera, width: number, height: number = width): Phaser.Cameras.Scene2D.Camera {
+        return camera.setZoom(camera.width / width, camera.height / height);
+      },
 
-    /**
-     * sets the given cameras top left position in the game world.
-     * @param camera camera to edit.
-     * @param x x coordinate of the top left position of the camera in the game world.
-     * @param y y coordinate of the top left position of the camera in the game world.
-     * @returns the camera.
-     */
-    SetPosition(camera: Phaser.Cameras.Scene2D.Camera, x: number, y: number) {
-      return camera.setPosition(x, y);
-    },
+      /**
+       * sets the given cameras top left position in the game world.
+       * @param camera camera to edit.
+       * @param x x coordinate of the top left position of the camera in the game world.
+       * @param y y coordinate of the top left position of the camera in the game world.
+       * @returns the camera.
+       */
+      SetPos(camera: Phaser.Cameras.Scene2D.Camera, x: number, y: number) {
+        return camera.setScroll(x - this.GetZoomOffsetX(camera), y - this.GetZoomOffsetY(camera));
+      },
 
-    /**
-     * sets the given cameras center position in the game world.
-     * @param camera camera to edit.
-     * @param x x coordinate of the center of the camera in the game world.
-     * @param y y coordinate of the center of the camera in the game world.
-     * @returns the camera.
-     */
-    SetCenter(camera: Phaser.Cameras.Scene2D.Camera, x: number, y: number) {
-      return camera.centerOn(x, y);
+      /**
+       * sets the given cameras center position in the game world.
+       * @param camera camera to edit.
+       * @param x x coordinate of the center of the camera in the game world.
+       * @param y y coordinate of the center of the camera in the game world.
+       * @returns the camera.
+       */
+      SetCenter(camera: Phaser.Cameras.Scene2D.Camera, x: number, y: number) {
+        return camera.centerOn(x, y);
+      },
+
+      /**
+       * Gets the x coordinate of the top left edge of the view, in world zoom applied view.
+       * @param camera camera to get the x coordinate from.
+       * @returns x coordinate.
+       */
+      GetX(camera: Phaser.Cameras.Scene2D.Camera): number {
+        return camera.worldView.x;
+      },
+      /**
+       * Gets the y coordinate of the top left edge of the view, in world zoom applied view.
+       * @param camera camera to get the y coordinate from.
+       * @returns y coordinate.
+       */
+      GetY(camera: Phaser.Cameras.Scene2D.Camera): number {
+        return camera.worldView.y;
+      },
+      /**
+       * Gets the width the view, in world zoom applied view.
+       * @param camera camera to get the width of.
+       * @returns width of view.
+       */
+      GetWidth(camera: Phaser.Cameras.Scene2D.Camera): number {
+        return camera.worldView.width;
+      },
+      /**
+       * Gets the width the view, in world zoom applied view.
+       * @param camera camera to get the width of.
+       * @returns width of view.
+       */
+      GetHeight(camera: Phaser.Cameras.Scene2D.Camera): number {
+        return camera.worldView.height;
+      },
+
+      /**
+       * gets the camera zoom offset that occurs when applying zoom.
+       * The offset is the distance on the x axis from the top left corner of the unzoomed view and the top left corner of the zoomed in view.
+       * @param camera
+       * @returns offset x axis
+       */
+      GetZoomOffsetX(camera: Phaser.Cameras.Scene2D.Camera): number {
+        return (camera.width - camera.displayWidth) * 0.5;
+      },
+      /**
+       * gets the camera zoom offset that occurs when applying zoom.
+       * The offset is the distance on the y axis from the top left corner of the unzoomed view and the top left corner of the zoomed in view.
+       * @param camera
+       * @returns offset y axis
+       */
+      GetZoomOffsetY(camera: Phaser.Cameras.Scene2D.Camera): number {
+        return (camera.height - camera.displayHeight) * 0.5;
+      },
     },
   };
 }
 
-export const gameManager: GameManager = new GameManager(config);
+/**
+ * My Phaser Game Manager Class.
+ * Phaser Utility for this project.
+ */
+export class MyGameManager extends GameManager {}
+
+export const gameManager: MyGameManager = new MyGameManager(config);

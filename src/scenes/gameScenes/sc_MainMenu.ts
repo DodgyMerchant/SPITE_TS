@@ -1,4 +1,4 @@
-import { GameManager, gameManager } from "../../main";
+import { MyGameManager as MGM, gameManager } from "../../main";
 import sc_Game from "./sc_Game";
 import { sc_MyScene } from "../abstract/sc_MyScene";
 
@@ -18,7 +18,7 @@ export default class sc_MainMenu extends sc_MyScene {
   create() {
     super.create();
 
-    this.scene.start(GameManager.Scene.UniqueAdd(this.scene,sc_Game));
+    this.scene.start(MGM.Scene.UniqueAdd(this.scene, sc_Game));
   }
 
   update(time: number, delta: number): void {

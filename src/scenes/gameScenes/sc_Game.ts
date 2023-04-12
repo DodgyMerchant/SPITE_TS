@@ -1,5 +1,5 @@
 import { Player } from "../../gameObj/player";
-import { GameManager, gameManager } from "../../main";
+import { MyGameManager, gameManager } from "../../main";
 import { sc_MyScene } from "../abstract/sc_MyScene";
 
 export default class sc_Game extends sc_MyScene {
@@ -24,22 +24,15 @@ export default class sc_Game extends sc_MyScene {
 
     let { width, height } = this.scale;
 
-    this.player = GameManager.GmObj.Add.AddnUpdate(this, new Player(this, width * 0.5, height * 0.5, ""));
-    this.player.play("an_player_idle_idle");
-
-    // let cent = this.player.getCenter();
-
-    // this.cameras.main.
-
-    // gameManager.Camera.SetViewSize(this.cameras.main, 50,50);
-
-    this.DEBUG.gameGraph?.strokeRectShape(this.player.getBounds());
-
-    console.log("log: this.DEBUG.gameGraph: ");
+    // img_player_idle_stand
+    // sheet_player_idle_idle
+    // an_player_idle_idle
+    this.player = MyGameManager.GmObj.Add.AddnUpdate(this, new Player(this, width * 0.5, height * 0.5, "img_player_idle_stand"));
   }
 
   update(time: number, delta: number): void {
     super.update(time, delta);
+
     // console.log("sc_Game update");
 
     //#region debug
@@ -51,7 +44,7 @@ export default class sc_Game extends sc_MyScene {
       "visible: " + this.player?.visible,
       "x/y: " + this.player?.x + "/" + this.player?.y,
       "key: " + this.player?.texture.key,
-      "name: " + this.player?.frame.name,
+      "index: " + this.player?.anims.currentFrame?.index,
     ]);
 
     //#endregion debug

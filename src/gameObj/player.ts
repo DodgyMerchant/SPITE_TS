@@ -1,4 +1,5 @@
-import { GameManager, gameManager } from "../main";
+import { MyGameManager as MGM } from "../main";
+import { WorldObject } from "./abstract/abstract";
 
 interface int_STATES {
   [i: string]: int_STATE;
@@ -37,21 +38,22 @@ const PLAYER_STATES: int_STATES = {
 /**
  * player Object class
  */
-export class Player extends Phaser.GameObjects.Sprite {
+export class Player extends WorldObject {
   //#region stamina
 
   readonly staminaMax: number = 100;
   stamina = this.staminaMax;
 
-  //#endregion
-  //#region
+  //#endregion stamina
+  //#region color
 
   /**
    * Default tint color, red.
    */
   readonly ColorDefault: number = Phaser.Display.Color.GetColor(144, 11, 9);
 
-  //#endregion
+  //#endregion color
+
   /**
    * create a PLayer Object.
    * @param scene — The Scene to which this Game Object belongs. A Game Object can only belong to one Scene at a time.
@@ -70,8 +72,18 @@ export class Player extends Phaser.GameObjects.Sprite {
     super(scene, x, y, texture, frame);
 
     //red tint
+    this.setTint(this.ColorDefault);
 
-    // this.setTint(this.ColorDefault);
+    /** keyboard input keys */
+    // this.input_Keyboard = this.scene.input.keyboard.addKeys({
+    //   up: Phaser.Input.Keyboard.KeyCodes.W,
+    //   down: Phaser.Input.Keyboard.KeyCodes.S,
+    //   left: Phaser.Input.Keyboard.KeyCodes.A,
+    //   right: Phaser.Input.Keyboard.KeyCodes.D,
+    //   jump: Phaser.Input.Keyboard.KeyCodes.SPACE,
+    // });
+
+    // this.player.play("an_player_idle_idle");
   }
 
   protected preUpdate(time: number, delta: number): void {
@@ -81,8 +93,8 @@ export class Player extends Phaser.GameObjects.Sprite {
     this.anims.update(time, delta);
   }
 
-  update(): void {
+  update(time: number, delta: number): void {
     // console.log("Player update");
-
+    // console.log(time, delta);
   }
 }
