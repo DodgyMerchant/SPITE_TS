@@ -49,12 +49,11 @@ export abstract class StateMovement extends StateMoveInput {
    * @param y — The vertical position of this Game Object in the world.
    * @param texture — The key, or instance of the Texture this Game Object will use to render with, as stored in the Texture Manager.
    * @param frame — An optional frame from the Texture this Game Object is rendering with.
-   * @param moveMeth Method called to get input for movement.
+   * @param inputMeth Method called to get input for movement.
    * @param inputEnabled if input enabled. default true.
    * @param moveEnabled if new movement is allowed enabled. default true.
    * @param moveStopped if all, old and new, movement will be prohibited. movement enabled. default false.
    */
-
   constructor(
     scene: Phaser.Scene,
     x: number,
@@ -71,14 +70,14 @@ export abstract class StateMovement extends StateMoveInput {
     this.moveEnabled = moveEnabled;
     this.moveStopped = moveStopped;
   }
-  
+
   /**
    * checks if the player can move.
    * True if the object can move.
    * False if the object cant move.
    * @returns if the object can move.
    */
-  moveCheck() : boolean{
+  moveCheck(): boolean {
     return this.moveEnabled && !this.moveStopped;
   }
 }

@@ -31,7 +31,7 @@ export abstract class StateMoveInput extends WorldObject {
   }
 
   /**
-   * Method called to get input for movement.
+   * Method called to get input for movement.  
    * Use inputGet() to get input.
    */
   private _inputMethod: InputFunction | undefined = undefined;
@@ -43,7 +43,7 @@ export abstract class StateMoveInput extends WorldObject {
   }
 
   /**
-   * if input enabled
+   * if input enabled.
    */
   private _inputEnabled: boolean = true;
   public get inputEnabled(): boolean {
