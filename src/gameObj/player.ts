@@ -69,8 +69,10 @@ export class Player extends BaseStateClass {
 
   //#endregion states
 
+  prog: number = 0;
+
   /**
-   * create a PLayer Object.
+   * create a Player Object.
    * @param scene The Scene to which this Game Object belongs. A Game Object can only belong to one Scene at a time.
    * @param x The horizontal position of this Game Object in the world.
    * @param y The vertical position of this Game Object in the world.
@@ -95,6 +97,8 @@ export class Player extends BaseStateClass {
     this._playerState = state;
     this._playerState.apply(this);
 
+    this.play("an_player_idle_idle");
+
     /** keyboard input keys */
     // this.input_Keyboard = this.scene.input.keyboard.addKeys({
     //   up: Phaser.Input.Keyboard.KeyCodes.W,
@@ -104,7 +108,7 @@ export class Player extends BaseStateClass {
     //   jump: Phaser.Input.Keyboard.KeyCodes.SPACE,
     // });
 
-    // this.player.play("an_player_idle_idle");
+    console.log(this.anims.currentAnim);
   }
 
   /**
@@ -119,6 +123,16 @@ export class Player extends BaseStateClass {
 
   protected preUpdate(time: number, delta: number): void {
     // console.log("Player pre update");
+
+    /**
+     * AVOID animation progrss methoids and variables.
+     * they dont work.
+     * setProgress +
+     */
+
+    this.prog = Math.floor(time / 1000) % this.anims.getTotalFrames();
+    // time
+    this.anims.setCurrentFrame(this.anims.currentAnim.frames[this.prog]);
 
     //updates internal animations???????????????
     this.anims.update(time, delta);

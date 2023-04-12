@@ -21,25 +21,7 @@ export default class sc_Init extends sc_MyScene {
   preload() {
     super.preload();
 
-    this.load.setPath("src/assets/");
-    // this.load.image("mapImg", "assets/mapImg.png");
-
-    this.load.image("img_player_idle_stand", "player/idle/img_player_idle_stand.png");
-
-    MGM.Load.strip(
-      this,
-      {
-        key: "sheet_player_idle_idle",
-        url: "player/idle/spr_player_idle_idle.png",
-        frameConfig: { frameWidth: 16, frameHeight: 22 },
-      },
-      {
-        key: "an_player_idle_idle",
-        frameRate: 1,
-        repeat: -1,
-        yoyo: true,
-      }
-    );
+    
   }
 
   create() {

@@ -1,3 +1,7 @@
+/**
+ * some state stuff.
+ */
+
 // State
 export type SimpleState = {
   /**
