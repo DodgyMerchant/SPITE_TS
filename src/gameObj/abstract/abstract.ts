@@ -1,3 +1,10 @@
+/**
+ * @file generel non system or purpos specific abstract phaser objject classes.
+ */
+
+/**
+ * genrell phaser abstract class
+ */
 export abstract class WorldObject extends Phaser.GameObjects.Sprite {
   /**
    * asbstract world object

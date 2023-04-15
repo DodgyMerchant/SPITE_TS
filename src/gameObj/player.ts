@@ -1,5 +1,6 @@
-import { BaseState, BaseStateClass } from "./abstract/baseStates";
-import { ComplexState, StateClass } from "./abstract/states";
+import { PBIClass } from "./abstract/PBI";
+import { BaseState, BaseStateClass } from "../myUtils/baseStates";
+import { ComplexState, StateClass } from "../myUtils/states";
 
 class PlayerState extends StateClass implements ComplexState {
   /**
@@ -29,47 +30,21 @@ class PlayerState extends StateClass implements ComplexState {
   readonly staminaTime: number;
 
   apply(player: Player): void {
-    player.stateSet(player.playerState.baseState);
+    player.baseSet(player.playerState.baseState);
   }
-  undo(player: Player): void {
-    throw new Error("Method not implemented.");
-    if (player) return;
-  }
+  undo(player: Player): void {}
 }
 
 /**
  * player Object class
  */
-export class Player extends BaseStateClass {
-  //#region stamina
-
-  readonly staminaMax: number = 100;
-  stamina = this.staminaMax;
-
-  //#endregion stamina
-  //#region color
-
-  /**
-   * Default tint color, red.
-   */
-  readonly ColorDefault: number = Phaser.Display.Color.GetColor(144, 11, 9);
-
-  //#endregion color
-  //#region states
-
-  private _playerState: PlayerState;
-  public get playerState(): PlayerState {
-    return this._playerState;
-  }
-  public set playerState(value: PlayerState) {
-    this._playerState.undo(this);
-    this._playerState = value;
-    this._playerState.apply(this);
-  }
-
-  //#endregion states
-
-  prog: number = 0;
+export class Player extends PBIClass {
+  playerInput: { [i: string]: Phaser.Input.Keyboard.Key | undefined } = {
+    W: undefined,
+    A: undefined,
+    S: undefined,
+    D: undefined,
+  };
 
   /**
    * create a Player Object.
@@ -97,18 +72,44 @@ export class Player extends BaseStateClass {
     this._playerState = state;
     this._playerState.apply(this);
 
-    this.play("an_player_idle_idle");
+    this.play("an_player_combat_transition");
 
     /** keyboard input keys */
-    // this.input_Keyboard = this.scene.input.keyboard.addKeys({
-    //   up: Phaser.Input.Keyboard.KeyCodes.W,
-    //   down: Phaser.Input.Keyboard.KeyCodes.S,
-    //   left: Phaser.Input.Keyboard.KeyCodes.A,
-    //   right: Phaser.Input.Keyboard.KeyCodes.D,
-    //   jump: Phaser.Input.Keyboard.KeyCodes.SPACE,
-    // });
 
-    console.log(this.anims.currentAnim);
+    if (this.scene.input.keyboard) {
+      let prop: Phaser.Input.Keyboard.Key;
+      for (const key in this.playerInput) {
+        if (Object.prototype.hasOwnProperty.call(this.playerInput, key)) {
+          this.playerInput[key] = this.scene.input.keyboard.addKey(key, true, false);
+        }
+      }
+    }
+  }
+
+  //#region color
+
+  /**
+   * Default tint color, red.
+   */
+  readonly ColorDefault: number = Phaser.Display.Color.GetColor(144, 11, 9);
+
+  //#endregion color
+  //#region stamina
+
+  readonly staminaMax: number = 100;
+  stamina = this.staminaMax;
+
+  //#endregion stamina
+  //#region states
+
+  private _playerState: PlayerState;
+  public get playerState(): PlayerState {
+    return this._playerState;
+  }
+  public set playerState(value: PlayerState) {
+    this._playerState.undo(this);
+    this._playerState = value;
+    this._playerState.apply(this);
   }
 
   /**
@@ -121,25 +122,17 @@ export class Player extends BaseStateClass {
     EXHAUSTED: new PlayerState("exhausted", BaseStateClass.BASE_STATES.FREE, 0, 0),
   };
 
-  protected preUpdate(time: number, delta: number): void {
-    // console.log("Player pre update");
+  //#endregion states
 
-    /**
-     * AVOID animation progrss methoids and variables.
-     * they dont work.
-     * setProgress +
-     */
-
-    this.prog = Math.floor(time / 1000) % this.anims.getTotalFrames();
-    // time
-    this.anims.setCurrentFrame(this.anims.currentAnim.frames[this.prog]);
-
-    //updates internal animations???????????????
-    this.anims.update(time, delta);
-  }
+  // protected preUpdate(time: number, delta: number): void {
+  //   this.anims.update(time, delta);
+  // }
 
   update(time: number, delta: number): void {
-    // console.log("Player update");
-    // console.log(time, delta);
+    super.update(time, delta);
+
+    if (this.playerInput.D?.isDown) {
+      this.setX(this.x + 1);
+    }
   }
 }

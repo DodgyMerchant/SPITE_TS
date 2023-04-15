@@ -1,4 +1,4 @@
-import { MyGameManager as MGM } from "../../main";
+import { SPITEManager as GM } from "../../main";
 
 /**
  * Debug Scene.
@@ -6,7 +6,7 @@ import { MyGameManager as MGM } from "../../main";
  */
 export class DebugScene extends Phaser.Scene {
   /**
-   *
+   * targeted scene for debug functions.
    */
   targetScene: Phaser.Scene | undefined;
   textObj: Phaser.GameObjects.Text | undefined;
@@ -46,19 +46,27 @@ export class DebugScene extends Phaser.Scene {
 
   create() {
     this.textObj = this.add.text(0, 0, "DEBUG", { color: "#00ff00", font: "16px Courier" });
-    this.inputkey = this.input.keyboard.addKey("J", true, false);
+    this.inputkey = this.input.keyboard?.addKey("J", true, false);
 
     this.gameGraph = this.add.graphics({
       x: 0,
       y: 0,
-      fillStyle: { color: Phaser.Display.Color.GetColor(255, 0, 0), alpha: 0.5 },
-      lineStyle: { color: Phaser.Display.Color.GetColor(255, 0, 0), alpha: 0.5, width: 1 },
+      fillStyle: { color: 0xff0000, alpha: 1.0 },
+      lineStyle: { color: 0xff0000, alpha: 1.0, width: 1 },
     });
     this.targetScene = this;
   }
 
   update(): void {
     this.Print();
+
+    //move game graph to top if it isnt in top position.
+    if (this.targetScene && this.gameGraph && this.targetScene != this) {
+      let chList = this.targetScene.children.list;
+      if (chList[chList.length - 1] != this.gameGraph) this.targetScene.children.bringToTop(this.gameGraph);
+
+      this.gameGraph.clear();
+    }
   }
 
   //////////////////////////////////////////////////////////////
@@ -96,7 +104,7 @@ export class DebugScene extends Phaser.Scene {
   TargetScene(scene: Phaser.Scene) {
     if (this.targetScene && this.gameGraph) {
       //game graph
-      MGM.GmObj.Move.Move(this.targetScene, scene, this.gameGraph);
+      GM.GmObj.Move.Move(this.targetScene, scene, this.gameGraph);
       this.gameGraph.setVisible(true);
       this.gameGraph.setActive(true);
 

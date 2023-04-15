@@ -47,10 +47,10 @@ export type StateObject<StateType> = {
   /**
    * get this objects state.
    */
-  stateGet(): StateType;
+  baseGet(): StateType;
   /**
    * set this objects state.
    * @param newState new object state.
    */
-  stateSet(newState: StateType): void;
+  baseSet(newState: StateType): void;
 };

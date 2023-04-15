@@ -1,4 +1,5 @@
-import { MyGameManager as MGM, gameManager } from "../../main";
+import { SPITEManager as GM } from "../../main";
+import { gameManager } from "../../main";
 import sc_MainMenu from "./sc_MainMenu";
 import { sc_MyScene } from "../abstract/sc_MyScene";
 
@@ -20,8 +21,6 @@ export default class sc_Init extends sc_MyScene {
 
   preload() {
     super.preload();
-
-    
   }
 
   create() {
@@ -29,7 +28,7 @@ export default class sc_Init extends sc_MyScene {
     // const { width, height } = this.scale;
     // this.add.image(width * 0.5, height * 0.5, "mapImg");
 
-    this.scene.start(MGM.Scene.UniqueAdd(this.scene, sc_MainMenu));
+    this.scene.start(GM.Scene.UniqueAdd(this.scene, sc_MainMenu) ?? undefined);
   }
 
   update(): void {

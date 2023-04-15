@@ -1,4 +1,4 @@
-import { WorldObject } from "./abstract";
+import { WorldObject } from "../gameObj/abstract/abstract";
 
 /**
  * input states
@@ -31,7 +31,7 @@ export abstract class StateMoveInput extends WorldObject {
   }
 
   /**
-   * Method called to get input for movement.  
+   * Method called to get input for movement.
    * Use inputGet() to get input.
    */
   private _inputMethod: InputFunction | undefined = undefined;

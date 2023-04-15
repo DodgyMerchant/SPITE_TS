@@ -1,5 +1,6 @@
-import { GameManager, MyGameManager as MGM } from "../../main";
+import { GameManager } from "../../myUtils/gameManager";
 import { DebugScene } from "./DebugScene";
+import { SPITEManager as GM } from "../../main";
 
 /**
  * Abstract game scene.
@@ -62,7 +63,7 @@ export abstract class sc_MyScene extends Phaser.Scene {
     var pointer = this.input.activePointer;
 
     let mainCam = this.cameras.main;
-    let mgmCv = MGM.Camera.View;
+    let mgmCv = GM.Camera.View;
 
     this.DEBUG?.AddText([
       "Mouse/////////////",

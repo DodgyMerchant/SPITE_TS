@@ -100,51 +100,55 @@ export abstract class BaseStateClass extends StateMovement implements StateObjec
   ) {
     super(scene, x, y, texture, frame, inputMeth, undefined, undefined, undefined);
 
-    this._state = state;
-    this._stateSet(state);
-
-    BaseStateClass.BASE_STATES.CONTROLLED.move;
+    this._baseState = state;
+    this._baseStateSet(state);
   }
 
-  private _state: BaseState;
+  private _baseState: BaseState;
 
   /**
-   * set state of this
+   * Base State.
+   *
+   * set/get state of this
    * @param state
    */
-  private _stateSet(state: BaseState) {
+  private _baseStateSet(state: BaseState) {
     state.apply(this);
 
-    this._state = state;
+    this._baseState = state;
   }
-  private _stateUnset(state: BaseState) {
+  private _baseStateUnset(state: BaseState) {
     state.undo(this);
   }
 
   /**
-   * vector to be used and thrown away for calculations
-   * dont save stuff in it
-   * alsways reset before using
-   * @type {Phaser.Math.Vector2} type
-   */
-  workVec: Phaser.Math.Vector2 = new Phaser.Math.Vector2();
-
-  /**
+   * Base State.
+   *
    * sets objects base state.
    * @param newState new base state.
    */
-  stateSet(newState: BaseState) {
-    this._stateUnset(this._state);
+  baseSet(newState: BaseState) {
+    this._baseStateUnset(this._baseState);
 
-    this._stateSet(newState);
+    this._baseStateSet(newState);
   }
 
   /**
+   * Base State.
+   *
    * gets objects base state.
    */
-  stateGet(): BaseState {
-    return this._state;
+  baseGet(): BaseState {
+    return this._baseState;
   }
+
+  //  /**
+  //    * vector to be used and thrown away for calculations
+  //    * dont save stuff in it
+  //    * alsways reset before using
+  //    * @type {Phaser.Math.Vector2} type
+  //    */
+  //   workVec: Phaser.Math.Vector2 = new Phaser.Math.Vector2();
 
   // /**
   //  * runs continuously
