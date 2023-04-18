@@ -37,23 +37,19 @@ export class PBIClass extends BaseStateClass {
   ) {
     super(scene, x, y, texture, frame, state, inputMeth);
 
-    this.on(
-      Phaser.Animations.Events.ANIMATION_COMPLETE,
-      /**
-       *
-       * @param anim
-       * @param frame
-       * @param gameObject
-       * @param frameKey
-       */ (
-        anim: Phaser.Animations.Animation,
-        frame: Phaser.Animations.AnimationFrame,
-        gameObject: Phaser.GameObjects.Sprite,
-        frameKey: String
-      ) => {
-        console.log("complete", anim, frame, gameObject, frameKey);
-      }
-    );
+    let call: MyPhaserTypes.Animation.GeneralCallback = (
+      anim: Phaser.Animations.Animation,
+      frame: Phaser.Animations.AnimationFrame,
+      gameObject: Phaser.GameObjects.Sprite,
+      frameKey: String
+    ) => {
+      // console.log("complete", anim, frame, gameObject, frameKey);
+      console.log("anim event key: ", frameKey);
+
+      // this.chain(["an_player_attack_ready", "an_player_attack_slash"]);
+    };
+
+    this.on(Phaser.Animations.Events.ANIMATION_COMPLETE_KEY + "an_player_attack_slash", call);
   }
 
   protected preUpdate(time: number, delta: number): void {

@@ -39,12 +39,7 @@ class PlayerState extends StateClass implements ComplexState {
  * player Object class
  */
 export class Player extends PBIClass {
-  playerInput: { [i: string]: Phaser.Input.Keyboard.Key | undefined } = {
-    W: undefined,
-    A: undefined,
-    S: undefined,
-    D: undefined,
-  };
+  playerInput: { [i: string]: Phaser.Input.Keyboard.Key } | undefined;
 
   /**
    * create a Player Object.
@@ -72,18 +67,20 @@ export class Player extends PBIClass {
     this._playerState = state;
     this._playerState.apply(this);
 
-    this.play("an_player_combat_transition");
+    //  an_
+    this.play("an_player_TEST");
 
     /** keyboard input keys */
+    let keyb = this.scene.input.keyboard;
+    if (keyb)
+      this.playerInput = {
+        W: keyb.addKey("W"),
+        A: keyb.addKey("W"),
+        S: keyb.addKey("W"),
+        D: keyb.addKey("W"),
+      };
 
-    if (this.scene.input.keyboard) {
-      let prop: Phaser.Input.Keyboard.Key;
-      for (const key in this.playerInput) {
-        if (Object.prototype.hasOwnProperty.call(this.playerInput, key)) {
-          this.playerInput[key] = this.scene.input.keyboard.addKey(key, true, false);
-        }
-      }
-    }
+    this.playerInput?.W;
   }
 
   //#region color
@@ -131,7 +128,7 @@ export class Player extends PBIClass {
   update(time: number, delta: number): void {
     super.update(time, delta);
 
-    if (this.playerInput.D?.isDown) {
+    if (this.playerInput?.D.isDown) {
       this.setX(this.x + 1);
     }
   }

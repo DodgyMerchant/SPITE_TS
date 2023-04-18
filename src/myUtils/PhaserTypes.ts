@@ -22,12 +22,12 @@ declare namespace MyPhaserTypes {
      * @param gameObject A reference to the Game Object on which the animation updated.
      * @param frameKey The unique key of the Animation Frame within the Animation.
      */
-    function GeneralCallback(
+    type GeneralCallback = (
       animation: Phaser.Animations.Animation,
       frame: Phaser.Animations.AnimationFrame,
       gameObject: Phaser.GameObjects.Sprite,
       frameKey: string
-    ): void;
+    ) => void;
 
     /**
      * Animation callback used on adding or removing an animation from the global animation manager.
@@ -38,7 +38,7 @@ declare namespace MyPhaserTypes {
      * @param key The key of the Animation that was removed from the global Animation Manager.
      * @param animation An instance of the removed Animation.
      */
-    function AddRemoveCallback(key: string, animation: Phaser.Animations.Animation): void;
+    type AddRemoveCallback = (key: string, animation: Phaser.Animations.Animation) => void;
 
     /**
      * This event is dispatched when the global Animation Manager pauses or resumes playback, having been previously paused or playing.

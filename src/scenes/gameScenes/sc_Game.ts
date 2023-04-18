@@ -1,5 +1,5 @@
 import { Player } from "../../gameObj/player";
-import { CGS_TYPE, SPITEManager as GM, gameManager } from "../../main";
+import { CGS_TYPE, SPITEManager as GM, MegaAnimConfig, gameManager } from "../../main";
 import { sc_MyScene } from "../abstract/sc_MyScene";
 
 // const ANIMS: {
@@ -16,6 +16,27 @@ import { sc_MyScene } from "../abstract/sc_MyScene";
 //     console.log("log: prop: ", prop);
 //   }
 // }
+
+type NestedConfig = {
+  [i: string]: MegaAnimConfig | NestedConfig;
+};
+
+const TEX: NestedConfig = {
+  PLAYER: {
+    COMBAT: {
+      Idle: {},
+    },
+    Test: {
+      key: "player_TEST",
+      url: "player/brace/spr_player_brace_deflect.png",
+      frameConfig: { frameWidth: 19, frameHeight: 23 },
+      frameRate: 4,
+      originX: 14,
+      originY: 9,
+      repeat: -1,
+    },
+  },
+};
 
 export default class sc_Game extends sc_MyScene {
   playerConfig: any;
@@ -37,10 +58,6 @@ export default class sc_Game extends sc_MyScene {
      * yoyo: true,
      * yoyos one time :D
      */
-    /**
-     * custom game manager load functions for convinience.
-     */
-    let _load = GM.Load;
 
     this.load.setPath("src/assets/");
     // this.load.image("mapImg", "assets/mapImg.png");
@@ -56,6 +73,9 @@ export default class sc_Game extends sc_MyScene {
 
       
       */
+
+      TEX.PLAYER.Test,
+
       //#region attack CGS
 
       {
@@ -606,6 +626,9 @@ export default class sc_Game extends sc_MyScene {
     // sheet_player_idle_idle
     // an_player_idle_idle
     this.player = GM.GmObj.Add.AddnUpdate(this, new Player(this, width * 0.5, height * 0.5, "img_player_idle_stand"));
+
+    if (this.player.anims.currentFrame) {
+    }
   }
 
   update(time: number, delta: number): void {
@@ -623,32 +646,54 @@ export default class sc_Game extends sc_MyScene {
         "active: " + this.player.active,
         "visible: " + this.player.visible,
         "x/y: " + this.player.x + "/" + this.player.y,
+        "origin x/y: " + this.player.displayOriginX + "/" + this.player.displayOriginY,
         "State///////////",
         "base: " + this.player.baseGet().toString(),
         "base state" + this.player.baseGet().toString(),
-        "Anim///////////",
-        "key: " + this.player.texture.key,
-        "index: " + this.player.anims.currentFrame?.index + " / " + this.player.anims.getTotalFrames(),
-        "isPlaying: " + this.player.anims.isPlaying,
-        // "forward: " + this.player.anims.forward,
-        // "inReverse: " + this.player.anims.inReverse,
-        // "yoyo: " + this.player.anims.yoyo,
-        // "repeat: " + this.player.anims.repeat,
-        // "repeatCounter: " + this.player.anims.repeatCounter,
       ]);
+
+      let anFr = this.player.anims.currentFrame;
+      if (anFr)
+        this.DEBUG.AddText([
+          "",
+          "Anim///////////",
+          "key: " + this.player.texture.key,
+          "index: " + anFr.index + " / " + this.player.anims.getTotalFrames(),
+          "fps: " + this.player.anims.currentAnim?.frameRate,
+          "isPlaying: " + this.player.anims.isPlaying,
+          // "forward: " + this.player.anims.forward,
+          // "inReverse: " + this.player.anims.inReverse,
+          // "yoyo: " + this.player.anims.yoyo,
+          // "repeat: " + this.player.anims.repeat,
+          // "repeatCounter: " + this.player.anims.repeatCounter,
+          "",
+          "Frame///////////",
+          "x/y: " + anFr.frame.x + "/" + anFr.frame.y,
+          "pivot x/y: " + anFr.frame.pivotX.toFixed(2) + "/" + anFr.frame.pivotY.toFixed(2),
+          "customPivot: " + anFr.frame.customPivot,
+        ]);
 
       // origin circles
       if (this.DEBUG.gameGraph) {
         let grap = this.DEBUG.gameGraph;
         let main = this.cameras.main;
 
-        let a = 0.5;
+        let a = 1;
         let w = 0.3;
 
         //player
+
+        let frame = this.player.anims.currentFrame?.frame;
+
         grap.lineStyle(w, 0xff0000, a);
+
+        grap.strokeRectShape(this.player.getBounds());
+        grap.fillPoint(this.player.x, this.player.y, 1);
         grap.strokeCircle(this.player.x, this.player.y, 1);
-        // grap.strokeCircle(this.player.anims., this.player.y, 1);
+
+        if (frame) {
+          grap.fillPoint(frame.x, frame.y, 1);
+        }
 
         // console.log(this.player.anims.currentAnim);
         // this.player.scaleX = -this.player.scaleX;
@@ -657,8 +702,8 @@ export default class sc_Game extends sc_MyScene {
         this.player.anims;
 
         //cam
-        grap.lineStyle(w, 0x00ff00, a);
-        grap.strokeCircle(main.worldView.centerX, main.worldView.centerY, 1);
+        grap.lineStyle(w, 0x00ff00, 0.2);
+        grap.strokeCircle(main.worldView.centerX, main.worldView.centerY, 5);
       }
     }
     //#endregion debug

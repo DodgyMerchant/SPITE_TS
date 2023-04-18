@@ -55,6 +55,57 @@ export enum CGS_TYPE {
   END,
 }
 
+export type MegaAnimConfig = Phaser.Types.Loader.FileTypes.SpriteSheetFileConfig &
+  Phaser.Types.Animations.Animation & {
+    /**
+     * Unique key without a prefix.
+     * Gets assembled with the sheetPrefix and animPrefix.
+     * @override
+     */
+    key?: string;
+    /**
+     * DONT YOU DARE DEFINE THIS!!!
+     *
+     * Jk. doesnt matter, it gets overwritten.
+     * @override
+     */
+    frames?: string | Phaser.Types.Animations.AnimationFrame[] | undefined;
+    /**
+     * overwritten.
+     */
+    baseKey?: string;
+    frameConfig: Phaser.Types.Loader.FileTypes.ImageFrameConfig | undefined;
+    originX: number;
+    originY: number;
+    /**
+     * Progress based index system progress numbers.
+     */
+    PBI?: number[];
+    /**
+     * Contact ground system
+     */
+    CGS?: {
+      /**
+       * index of animation
+       */
+      index: number;
+      contacts: {
+        /**
+         * type of contact.
+         */
+        type: CGS_TYPE;
+        /**
+         * x coordinate of contact relative to top left corner of sprite.
+         */
+        x: number;
+        /**
+         * y coordinate of contact relative to top left corner of sprite.
+         */
+        y: number;
+      }[];
+    }[];
+  };
+
 /**
  * My Phaser Game Manager Class.
  * Phaser Utility for this project.
@@ -100,61 +151,7 @@ export class SPITEManager extends GameManager {
      * @param scene
      * @param strips
      */
-    OmegaStip(
-      scene: Phaser.Scene,
-      sheetPrefix: string,
-      animPrefix: string,
-      strips: (Phaser.Types.Loader.FileTypes.SpriteSheetFileConfig &
-        Phaser.Types.Animations.Animation & {
-          /**
-           * Unique key without a prefix.
-           * Gets assembled with the sheetPrefix and animPrefix.
-           * @override
-           */
-          key?: string;
-          /**
-           * DONT YOU DARE DEFINE THIS!!!
-           *
-           * Jk. doesnt matter, it gets overwritten.
-           * @override
-           */
-          frames?: string | Phaser.Types.Animations.AnimationFrame[] | undefined;
-          /**
-           * overwritten.
-           */
-          baseKey?: string;
-          frameConfig: Phaser.Types.Loader.FileTypes.ImageFrameConfig | undefined;
-          originX: number;
-          originY: number;
-          /**
-           * Progress based index system progress numbers.
-           */
-          PBI?: number[];
-          /**
-           * Contact ground system
-           */
-          CGS?: {
-            /**
-             * index of animation
-             */
-            index: number;
-            contacts: {
-              /**
-               * type of contact.
-               */
-              type: CGS_TYPE;
-              /**
-               * x coordinate of contact relative to top left corner of sprite.
-               */
-              x: number;
-              /**
-               * y coordinate of contact relative to top left corner of sprite.
-               */
-              y: number;
-            }[];
-          }[];
-        })[]
-    ) {
+    OmegaStip(scene: Phaser.Scene, sheetPrefix: string, animPrefix: string, strips: MegaAnimConfig[]) {
       /**
        * "key" property is used two times so needs to be overwritten and prepaired.
        */
@@ -165,11 +162,27 @@ export class SPITEManager extends GameManager {
 
       scene.load.spritesheet(strips);
 
+      let anim;
       strips.forEach((strip) => {
         scene.load.on("filecomplete-spritesheet-" + strip.key, (fileKey: string) => {
           strip.key = animPrefix + strip.baseKey;
           strip.frames = fileKey;
-          scene.anims.create(strip);
+
+          anim = scene.anims.create(strip);
+
+          /**
+           * set origin for every frame
+           */
+          if (anim) {
+            anim.frames.forEach((animFrame) => {
+              animFrame.frame.customPivot = true;
+              animFrame.frame.pivotX = strip.originX / animFrame.frame.width;
+              animFrame.frame.pivotY = strip.originY / animFrame.frame.height;
+
+              // animFrame.frame.x = strip.originX;
+              // animFrame.frame.y = strip.originY;
+            });
+          }
         });
       });
     },
