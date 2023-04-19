@@ -16,7 +16,8 @@ export default class sc_Init extends sc_MyScene {
   init() {
     super.init();
 
-    gameManager.Game.scene.add("DEBUG", this.DEBUG);
+    // enter debugging scene into system
+    gameManager.Game.scene.add(this.DEBUG.key, this.DEBUG);
   }
 
   preload() {
@@ -25,13 +26,15 @@ export default class sc_Init extends sc_MyScene {
 
   create() {
     super.create();
-    // const { width, height } = this.scale;
-    // this.add.image(width * 0.5, height * 0.5, "mapImg");
 
     this.scene.start(GM.Scene.UniqueAdd(this.scene, sc_MainMenu) ?? undefined);
+
   }
 
   update(): void {
-    console.log("sc_Init update");
+    // console.log("sc_Init update");
+
+    
+    this.DEBUG.AddText(["TEST"]);
   }
 }

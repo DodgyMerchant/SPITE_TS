@@ -1,4 +1,4 @@
-import { DebugScene } from "../scenes/abstract/DebugScene";
+import { DebugScene } from "../scenes/DebugScene";
 import { sc_MyScene } from "../scenes/abstract/sc_MyScene";
 
 /**
@@ -55,6 +55,22 @@ export class GameManager {
 
     UniqueAdd(ScenePlugin: Phaser.Scenes.ScenePlugin, SceneClass: new (...args: any) => Phaser.Scene): Phaser.Scene | null {
       return this.Add(ScenePlugin, SceneClass.name, SceneClass);
+    },
+
+    /**
+     * the sene order.
+     *
+     * the "top" scene is the last one in the scene list that is active.
+     */
+    Order: {
+      getTop(ScenePlugin: Phaser.Scenes.ScenePlugin): Phaser.Scene {
+        let list = ScenePlugin.manager.scenes;
+        return list[list.length - 1];
+      },
+
+      isTop(scene: Phaser.Scene): boolean {
+        return this.getTop(scene.scene) == scene;
+      },
     },
   };
 
@@ -329,4 +345,3 @@ export class GameManager {
     },
   };
 }
-

@@ -1,10 +1,11 @@
-import { SPITEManager as GM } from "../../main";
+import { SPITEManager as GM } from "../main";
+import sc_Hud from "./abstract/sc_HUD";
 
 /**
  * Debug Scene.
  * handles debug scene for displaying.
  */
-export class DebugScene extends Phaser.Scene {
+export class DebugScene extends sc_Hud {
   /**
    * targeted scene for debug functions.
    */
@@ -20,24 +21,7 @@ export class DebugScene extends Phaser.Scene {
   key: string = "DEBUG_SCENE";
 
   constructor(x: number, y: number, width: number, height: number, zoom: number) {
-    super({
-      key: "DEBUG_SCENE",
-      cameras: {
-        name: "DEBUG_CAM",
-        x: x,
-        y: y,
-        width: width,
-        height: height,
-        scrollX: 0,
-        scrollY: 0,
-        backgroundColor: "",
-        rotation: 0,
-        roundPixels: true,
-        zoom: zoom,
-      },
-      active: true,
-      visible: true,
-    });
+    super("DEBUG_SCENE", "DEBUG_CAM", x, y, width, height, zoom);
   }
 
   init() {}
@@ -45,6 +29,8 @@ export class DebugScene extends Phaser.Scene {
   preload() {}
 
   create() {
+    super.create();
+
     this.textObj = this.add.text(0, 0, "DEBUG", { color: "#00ff00", font: "16px Courier" });
     this.inputkey = this.input.keyboard?.addKey("J", true, false);
 
@@ -58,6 +44,8 @@ export class DebugScene extends Phaser.Scene {
   }
 
   update(): void {
+    super.update();
+
     this.Print();
 
     //move game graph to top if it isnt in top position.

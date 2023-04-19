@@ -1,5 +1,5 @@
 import { GameManager } from "../../myUtils/gameManager";
-import { DebugScene } from "./DebugScene";
+import { DebugScene } from "../DebugScene";
 import { SPITEManager as GM } from "../../main";
 
 /**
@@ -13,6 +13,9 @@ export abstract class sc_MyScene extends Phaser.Scene {
 
   //#region debug
 
+  /**
+   * debugging scnee to use.
+   */
   DEBUG: DebugScene;
 
   //#endregion debug
@@ -50,9 +53,6 @@ export abstract class sc_MyScene extends Phaser.Scene {
     });
 
     //debug
-    //bring debug scene to top
-    this.scene.bringToTop(this.DEBUG.key);
-
     this.DEBUG.TargetScene(this);
 
     // console.log(this.events.eventNames());
@@ -99,6 +99,7 @@ export abstract class sc_MyScene extends Phaser.Scene {
       "w/h: " + mgmCv.GetWidth(mainCam) + "/" + mgmCv.GetHeight(mainCam),
       "off w/h: " + mgmCv.GetZoomOffsetX(mainCam) + "/" + mgmCv.GetZoomOffsetY(mainCam),
     ]);
+
 
     //#endregion debug
   }
