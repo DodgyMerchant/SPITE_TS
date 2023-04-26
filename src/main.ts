@@ -1,6 +1,8 @@
 import Phaser from "phaser";
 import sc_Init from "./scenes/gameScenes/sc_Init";
 import { GameManager } from "./myUtils/gameManager";
+import { CGSManager, CGS_Frame } from "./gameObj/abstract/CGS";
+import { PBIManager, PBI_List } from "./gameObj/abstract/PBI";
 
 /*
 tried fixing render context willReadFrequently warning.
@@ -37,80 +39,110 @@ const config: Phaser.Types.Core.GameConfig = {
   },
 };
 
-/**
- *
- */
-export enum CGS_TYPE {
-  /**
-   *
-   */
-  NEW,
-  /**
-   *
-   */
-  CONTINUED,
-  /**
-   *
-   */
-  END,
-}
+// type MegaAnim = {
+//   /**
+//    * Base key to use with the sheetPrefix and animPrefix.
+//    */
+//   baseKey: string;
+//   /**
+//    * key for associated animation object in the phaser animation manager.
+//    */
+//   animKey: string;
+//   /**
+//    * key for associated Sprite Sheet object in the phaser animation manager.
+//    */
+//   sheetKey: string;
+//   /**
+//    * origin point x value of the sprites.
+//    * Added from the top left corner.
+//    */
+//   originX: number;
+//   /**
+//    * origin point y value of the sprites.
+//    * Added from the top left corner.
+//    */
+//   originY: number;
+//   /**
+//    * Progress based index system progress numbers.
+//    */
+//   PBI?: PBI_List;
+//   /**
+//    * Contact ground system
+//    */
+//   CGS?: CGS_Frame[];
 
-export type MegaAnimConfig = Phaser.Types.Loader.FileTypes.SpriteSheetFileConfig &
+//   /**
+//    * DONT YOU DARE DEFINE THIS!!!
+//    *
+//    * Jk. doesnt matter, it gets overwritten.
+//    * @override
+//    */
+//   frames?: string | Phaser.Types.Animations.AnimationFrame[] | undefined;
+// };
+
+type MegaAnimConfig = Phaser.Types.Loader.FileTypes.SpriteSheetFileConfig &
   Phaser.Types.Animations.Animation & {
     /**
-     * Unique key without a prefix.
-     * Gets assembled with the sheetPrefix and animPrefix.
-     * @override
-     */
-    key?: string;
-    /**
-     * DONT YOU DARE DEFINE THIS!!!
-     *
-     * Jk. doesnt matter, it gets overwritten.
-     * @override
-     */
-    frames?: string | Phaser.Types.Animations.AnimationFrame[] | undefined;
-    /**
-     * overwritten.
+     * Base key to use with the sheetPrefix and animPrefix.
      */
     baseKey?: string;
-    frameConfig: Phaser.Types.Loader.FileTypes.ImageFrameConfig | undefined;
     originX: number;
     originY: number;
     /**
      * Progress based index system progress numbers.
      */
-    PBI?: number[];
+    PBI?: PBI_List;
     /**
      * Contact ground system
      */
-    CGS?: {
-      /**
-       * index of animation
-       */
-      index: number;
-      contacts: {
-        /**
-         * type of contact.
-         */
-        type: CGS_TYPE;
-        /**
-         * x coordinate of contact relative to top left corner of sprite.
-         */
-        x: number;
-        /**
-         * y coordinate of contact relative to top left corner of sprite.
-         */
-        y: number;
-      }[];
-    }[];
+    CGS?: CGS_Frame[];
+
+    /**
+     * DONT NEED TO DEFINE!!
+     * Gets generated!
+     * @override
+     */
+    frames?: string | Phaser.Types.Animations.AnimationFrame[] | undefined;
+    /**
+     * Unique key without a prefix.
+     * Gets assembled with the sheetPrefix and animPrefix.
+     * overwritten.
+     * @override
+     */
+    key: string;
   };
 
 /**
  * My Phaser Game Manager Class.
  * Phaser Utility for this project.
  */
-export class SPITEManager extends GameManager {
+export class SPITEManager extends GameManager implements PBIManager, CGSManager {
+  //#region CGS
+
+  CGSget(key: string): CGS_Frame[] | undefined {
+    return this.CGS_Map.get(key);
+  }
+  CGSset(key: string, frameList: CGS_Frame[]): void {
+    this.CGS_Map.set(key, frameList);
+  }
+  /**
+   * map containing all PBI entries
+   */
+  private CGS_Map = new Map<string, CGS_Frame[]>();
+
+  //#endregion CGS
+
+  PBIget(key: string): PBI_List | undefined {
+    return this.PBI_Map.get(key);
+  }
+  PBIset(key: string, list: PBI_List): void {
+    this.PBI_Map.set(key, list);
+  }
+  /**
+   * map containing all PBI entries
+   */
+  private PBI_Map = new Map<string, PBI_List>();
+
   /**
    * Phaser Loading utility bundle.
    *
@@ -149,21 +181,33 @@ export class SPITEManager extends GameManager {
     /**
      * real dirty mass sprite strip loading
      * @param scene
+     * @param PBI_Manager
+     * @param sheetPrefix prefix for SpriteSheet keys added to all baseKey properties for key generation.
+     * @param animPrefix prefix for Animation keys added to all baseKey properties for key generation.
      * @param strips
+     * @returns
      */
-    OmegaStip(scene: Phaser.Scene, sheetPrefix: string, animPrefix: string, strips: MegaAnimConfig[]) {
-      /**
-       * "key" property is used two times so needs to be overwritten and prepaired.
-       */
+    OmegaStip(
+      scene: Phaser.Scene,
+      PBI_Manager: PBIManager,
+      CGS_Manager: CGSManager,
+      sheetPrefix: string,
+      animPrefix: string,
+      strips: MegaAnimConfig[]
+    ) {
+      let anim;
+
       strips.forEach((strip) => {
+        /*
+         * "key" property is used two times so needs to be overwritten and prepaired.
+         */
         strip.baseKey = strip.key;
         strip.key = sheetPrefix + strip.baseKey;
-      });
 
-      scene.load.spritesheet(strips);
+        //create sprite sheets
+        scene.load.spritesheet(strip);
 
-      let anim;
-      strips.forEach((strip) => {
+        //callback for completed sprite sheet
         scene.load.on("filecomplete-spritesheet-" + strip.key, (fileKey: string) => {
           strip.key = animPrefix + strip.baseKey;
           strip.frames = fileKey;
@@ -183,6 +227,12 @@ export class SPITEManager extends GameManager {
               // animFrame.frame.y = strip.originY;
             });
           }
+
+          //PBI
+          if (strip.PBI) PBI_Manager.PBIset(strip.key, strip.PBI);
+
+          //CGS
+          if (strip.CGS) CGS_Manager.CGSset(strip.key, strip.CGS);
         });
       });
     },

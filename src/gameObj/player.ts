@@ -67,7 +67,6 @@ export class Player extends PBIClass {
     this._playerState = state;
     this._playerState.apply(this);
 
-    //  an_
     this.play("an_player_TEST");
 
     /** keyboard input keys */
@@ -75,9 +74,9 @@ export class Player extends PBIClass {
     if (keyb)
       this.playerInput = {
         W: keyb.addKey("W"),
-        A: keyb.addKey("W"),
-        S: keyb.addKey("W"),
-        D: keyb.addKey("W"),
+        A: keyb.addKey("A"),
+        S: keyb.addKey("S"),
+        D: keyb.addKey("D"),
       };
 
     this.playerInput?.W;

@@ -1,5 +1,6 @@
+import { CGS_TYPE } from "../../gameObj/abstract/CGS";
 import { Player } from "../../gameObj/player";
-import { CGS_TYPE, SPITEManager as GM, MegaAnimConfig, gameManager } from "../../main";
+import { SPITEManager as GM, gameManager } from "../../main";
 import { sc_MyScene } from "../abstract/sc_MyScene";
 
 // const ANIMS: {
@@ -16,27 +17,6 @@ import { sc_MyScene } from "../abstract/sc_MyScene";
 //     console.log("log: prop: ", prop);
 //   }
 // }
-
-type NestedConfig = {
-  [i: string]: MegaAnimConfig | NestedConfig;
-};
-
-const TEX: NestedConfig = {
-  PLAYER: {
-    COMBAT: {
-      Idle: {},
-    },
-    Test: {
-      key: "player_TEST",
-      url: "player/brace/spr_player_brace_deflect.png",
-      frameConfig: { frameWidth: 19, frameHeight: 23 },
-      frameRate: 4,
-      originX: 14,
-      originY: 9,
-      repeat: -1,
-    },
-  },
-};
 
 export default class sc_Game extends sc_MyScene {
   playerConfig: any;
@@ -64,17 +44,24 @@ export default class sc_Game extends sc_MyScene {
 
     this.load.image("img_player_idle_stand", "player/idle/img_player_idle_stand.png");
 
-    GM.Load.OmegaStip(this, "sheet_", "an_", [
+    GM.Load.OmegaStip(this, gameManager, gameManager, "sheet_", "an_", [
       /*
       pingpong: 
         yoyo: true,
         repeat: -1
 
 
-      
       */
 
-      TEX.PLAYER.Test,
+      {
+        key: "player_TEST",
+        url: "player/brace/spr_player_brace_deflect.png",
+        frameConfig: { frameWidth: 19, frameHeight: 23 },
+        frameRate: 4,
+        originX: 14,
+        originY: 9,
+        repeat: -1,
+      },
 
       //#region attack CGS
 
@@ -626,9 +613,6 @@ export default class sc_Game extends sc_MyScene {
     // sheet_player_idle_idle
     // an_player_idle_idle
     this.player = GM.GmObj.Add.AddnUpdate(this, new Player(this, width * 0.5, height * 0.5, "img_player_idle_stand"));
-
-    if (this.player.anims.currentFrame) {
-    }
   }
 
   update(time: number, delta: number): void {

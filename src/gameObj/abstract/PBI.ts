@@ -1,7 +1,7 @@
 import { BaseState, BaseStateClass } from "../../myUtils/baseStates";
 import { InputFunction } from "../../myUtils/stateMoveInput";
 
-/**
+/*
  * The animation event flow is as follows:
  *
  * ANIMATION_START
@@ -14,6 +14,8 @@ import { InputFunction } from "../../myUtils/stateMoveInput";
  *
  * If the animation is restarted while it is already playing, ANIMATION_RESTART is emitted.
  */
+
+export type PBI_List = Array<number>;
 
 export class PBIClass extends BaseStateClass {
   /**
@@ -55,7 +57,7 @@ export class PBIClass extends BaseStateClass {
   protected preUpdate(time: number, delta: number): void {
     // console.log("Player pre update");
     /**
-     * AVOID animation progrss methoids and variables.
+     * AVOID animation progrss methods and variables.
      * they dont work.
      * setProgress +
      */
@@ -66,3 +68,19 @@ export class PBIClass extends BaseStateClass {
     super.preUpdate(time, delta);
   }
 }
+
+export type PBIManager = {
+  /**
+   * set PBI entry for a key.
+   *
+   * undefined if no entry exists.
+   * @param key
+   */
+  PBIget(key: string): PBI_List | undefined;
+  /**
+   * set PBI entry for a key
+   * @param key
+   * @param list
+   */
+  PBIset(key: string, list: PBI_List): void;
+};
