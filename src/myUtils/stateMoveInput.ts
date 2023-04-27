@@ -1,4 +1,5 @@
 import { WorldObject } from "../gameObj/abstract/abstract";
+import { sc_MyScene } from "../scenes/abstract/sc_MyScene";
 
 /**
  * input states
@@ -16,7 +17,7 @@ export abstract class StateMoveInput extends WorldObject {
    * @param enabled if input enabled. default true.
    */
   constructor(
-    scene: Phaser.Scene,
+    scene: sc_MyScene,
     x: number,
     y: number,
     texture: string | Phaser.Textures.Texture,

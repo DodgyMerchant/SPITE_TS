@@ -622,74 +622,82 @@ export default class sc_Game extends sc_MyScene {
 
     //#region debug
 
-    // player
-    if (this.player) {
-      this.DEBUG.AddText([
-        "",
-        "Player///////////",
-        "active: " + this.player.active,
-        "visible: " + this.player.visible,
-        "x/y: " + this.player.x + "/" + this.player.y,
-        "origin x/y: " + this.player.displayOriginX + "/" + this.player.displayOriginY,
-        "State///////////",
-        "base: " + this.player.baseGet().toString(),
-        "base state" + this.player.baseGet().toString(),
-      ]);
+    if (this.DEBUG.enabled) {
+      // player
 
-      let anFr = this.player.anims.currentFrame;
-      if (anFr)
+      if (this.player) {
         this.DEBUG.AddText([
           "",
-          "Anim///////////",
-          "key: " + this.player.texture.key,
-          "index: " + anFr.index + " / " + this.player.anims.getTotalFrames(),
-          "fps: " + this.player.anims.currentAnim?.frameRate,
-          "isPlaying: " + this.player.anims.isPlaying,
-          // "forward: " + this.player.anims.forward,
-          // "inReverse: " + this.player.anims.inReverse,
-          // "yoyo: " + this.player.anims.yoyo,
-          // "repeat: " + this.player.anims.repeat,
-          // "repeatCounter: " + this.player.anims.repeatCounter,
-          "",
-          "Frame///////////",
-          "x/y: " + anFr.frame.x + "/" + anFr.frame.y,
-          "pivot x/y: " + anFr.frame.pivotX.toFixed(2) + "/" + anFr.frame.pivotY.toFixed(2),
-          "customPivot: " + anFr.frame.customPivot,
+          "Player///////////",
+          "active: " + this.player.active,
+          "visible: " + this.player.visible,
+          "x/y: " + this.player.x + "/" + this.player.y,
+          "origin x/y: " + this.player.displayOriginX + "/" + this.player.displayOriginY,
+          "State///////////",
+          "base: " + this.player.baseGet().toString(),
+          "base state" + this.player.baseGet().toString(),
+          "Stamina//////////",
+          "stam: " + this.player.stamina + " / " + this.player.stamMax,
+          "tick: " + this.player._stamTick,
+          "tick: " + this.player._stamTimeCount + " / " + this.player._stamTime,
         ]);
 
-      // origin circles
-      if (this.DEBUG.gameGraph) {
-        let grap = this.DEBUG.gameGraph;
-        let main = this.cameras.main;
+        let anFr = this.player.anims.currentFrame;
+        if (anFr)
+          this.DEBUG.AddText([
+            "",
+            "Anim///////////",
+            "key: " + this.player.texture.key,
+            "index: " + anFr.index + " / " + this.player.anims.getTotalFrames(),
+            "fps: " + this.player.anims.currentAnim?.frameRate,
+            "isPlaying: " + this.player.anims.isPlaying,
+            // "forward: " + this.player.anims.forward,
+            // "inReverse: " + this.player.anims.inReverse,
+            // "yoyo: " + this.player.anims.yoyo,
+            // "repeat: " + this.player.anims.repeat,
+            // "repeatCounter: " + this.player.anims.repeatCounter,
+            "",
+            "Frame///////////",
+            "x/y: " + anFr.frame.x + "/" + anFr.frame.y,
+            "pivot x/y: " + anFr.frame.pivotX.toFixed(2) + "/" + anFr.frame.pivotY.toFixed(2),
+            "customPivot: " + anFr.frame.customPivot,
+          ]);
 
-        let a = 1;
-        let w = 0.3;
+        // origin circles
+        if (this.DEBUG.gameGraph) {
+          let grap = this.DEBUG.gameGraph;
+          let main = this.cameras.main;
 
-        //player
+          let a = 1;
+          let w = 0.3;
 
-        let frame = this.player.anims.currentFrame?.frame;
+          //player
 
-        grap.lineStyle(w, 0xff0000, a);
+          let frame = this.player.anims.currentFrame?.frame;
 
-        grap.strokeRectShape(this.player.getBounds());
-        grap.fillPoint(this.player.x, this.player.y, 1);
-        grap.strokeCircle(this.player.x, this.player.y, 1);
+          grap.lineStyle(w, 0xff0000, a);
 
-        if (frame) {
-          grap.fillPoint(frame.x, frame.y, 1);
+          grap.strokeRectShape(this.player.getBounds());
+          grap.fillPoint(this.player.x, this.player.y, 1);
+          grap.strokeCircle(this.player.x, this.player.y, 1);
+
+          if (frame) {
+            grap.fillPoint(frame.x, frame.y, 1);
+          }
+
+          // console.log(this.player.anims.currentAnim);
+          // this.player.scaleX = -this.player.scaleX;
+          // this.player.rotation += 0.001;
+
+          this.player.anims;
+
+          //cam
+          grap.lineStyle(w, 0x00ff00, 0.2);
+          grap.strokeCircle(main.worldView.centerX, main.worldView.centerY, 5);
         }
-
-        // console.log(this.player.anims.currentAnim);
-        // this.player.scaleX = -this.player.scaleX;
-        // this.player.rotation += 0.001;
-
-        this.player.anims;
-
-        //cam
-        grap.lineStyle(w, 0x00ff00, 0.2);
-        grap.strokeCircle(main.worldView.centerX, main.worldView.centerY, 5);
       }
     }
+
     //#endregion debug
   }
 }

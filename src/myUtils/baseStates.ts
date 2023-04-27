@@ -1,3 +1,4 @@
+import { sc_MyScene } from "../scenes/abstract/sc_MyScene";
 import { InputFunction } from "./stateMoveInput";
 import { StateMovement } from "./stateMovement";
 import { ComplexState, StateObject } from "./states";
@@ -90,7 +91,7 @@ export abstract class BaseStateClass extends StateMovement implements StateObjec
    * @param inputMeth Method called to get input for movement.
    */
   constructor(
-    scene: Phaser.Scene,
+    scene: sc_MyScene,
     x: number,
     y: number,
     texture: string | Phaser.Textures.Texture,

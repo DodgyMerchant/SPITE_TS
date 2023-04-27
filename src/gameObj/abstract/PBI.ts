@@ -1,5 +1,6 @@
 import { BaseState, BaseStateClass } from "../../myUtils/baseStates";
 import { InputFunction } from "../../myUtils/stateMoveInput";
+import { sc_MyScene } from "../../scenes/abstract/sc_MyScene";
 
 /*
  * The animation event flow is as follows:
@@ -29,7 +30,7 @@ export class PBIClass extends BaseStateClass {
    * @param inputMeth Method called to get input for movement.
    */
   constructor(
-    scene: Phaser.Scene,
+    scene: sc_MyScene,
     x: number,
     y: number,
     texture: string | Phaser.Textures.Texture,

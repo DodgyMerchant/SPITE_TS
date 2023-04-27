@@ -7,6 +7,10 @@ import { sc_MyScene } from "../scenes/abstract/sc_MyScene";
  */
 export class GameManager {
   Game: Phaser.Game;
+  /**
+   * the targeted frames per second
+   */
+  FPS_Target: number;
 
   Scales = {
     PortWidth: 800,
@@ -21,6 +25,8 @@ export class GameManager {
     this.DebugScene = new DebugScene(0, 0, this.Scales.PortWidth, this.Scales.PortHeight, 1);
 
     this.Game = new Phaser.Game(GameConfig);
+
+    this.FPS_Target = this.Game.loop.targetFps;
 
     console.log("Used renderer: ", this.Game.renderer.constructor.name);
   }
@@ -63,11 +69,21 @@ export class GameManager {
      * the "top" scene is the last one in the scene list that is active.
      */
     Order: {
+      /**
+       * get the top scene.
+       * @param ScenePlugin
+       * @returns
+       */
       getTop(ScenePlugin: Phaser.Scenes.ScenePlugin): Phaser.Scene {
         let list = ScenePlugin.manager.scenes;
         return list[list.length - 1];
       },
 
+      /**
+       * check if given scene is ontop.
+       * @param scene
+       * @returns
+       */
       isTop(scene: Phaser.Scene): boolean {
         return this.getTop(scene.scene) == scene;
       },
@@ -213,6 +229,33 @@ export class GameManager {
         GameManager.GmObj.Add.Add(toScene, child);
 
         return child;
+      },
+    },
+
+    /**
+     * the order of game objects within a scene.
+     *
+     * the "top" scene is the last one in the scene list that is active.
+     */
+    Order: {
+      /**
+       * get top object
+       * @param obj
+       * @returns
+       */
+      getTop(obj: Phaser.GameObjects.GameObject): Phaser.GameObjects.GameObject {
+        let list = obj.scene.children.list;
+
+        return list[list.length - 1];
+      },
+
+      /**
+       * check if object is ontop
+       * @param scene
+       * @returns
+       */
+      isTop(obj: Phaser.GameObjects.GameObject): boolean {
+        return this.getTop(obj) == obj;
       },
     },
   };

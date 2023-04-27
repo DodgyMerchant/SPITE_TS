@@ -117,6 +117,10 @@ type MegaAnimConfig = Phaser.Types.Loader.FileTypes.SpriteSheetFileConfig &
  * Phaser Utility for this project.
  */
 export class SPITEManager extends GameManager implements PBIManager, CGSManager {
+  constructor(GameConfig?: Phaser.Types.Core.GameConfig | undefined) {
+    super(GameConfig);
+  }
+
   //#region CGS
 
   CGSget(key: string): CGS_Frame[] | undefined {
@@ -131,6 +135,7 @@ export class SPITEManager extends GameManager implements PBIManager, CGSManager 
   private CGS_Map = new Map<string, CGS_Frame[]>();
 
   //#endregion CGS
+  //#region PBI
 
   PBIget(key: string): PBI_List | undefined {
     return this.PBI_Map.get(key);
@@ -138,10 +143,13 @@ export class SPITEManager extends GameManager implements PBIManager, CGSManager 
   PBIset(key: string, list: PBI_List): void {
     this.PBI_Map.set(key, list);
   }
+
   /**
    * map containing all PBI entries
    */
   private PBI_Map = new Map<string, PBI_List>();
+
+  //#endregion PBI
 
   /**
    * Phaser Loading utility bundle.

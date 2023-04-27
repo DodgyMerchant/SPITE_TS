@@ -1,3 +1,4 @@
+import { sc_MyScene } from "../scenes/abstract/sc_MyScene";
 import { InputFunction, StateMoveInput } from "./stateMoveInput";
 
 /**
@@ -55,7 +56,7 @@ export abstract class StateMovement extends StateMoveInput {
    * @param moveStopped if all, old and new, movement will be prohibited. movement enabled. default false.
    */
   constructor(
-    scene: Phaser.Scene,
+    scene: sc_MyScene,
     x: number,
     y: number,
     texture: string | Phaser.Textures.Texture,

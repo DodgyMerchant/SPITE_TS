@@ -1,24 +1,17 @@
 import { GameManager } from "../../myUtils/gameManager";
-import { DebugScene } from "../DebugScene";
+import { DebugActivated, DebugScene } from "../DebugScene";
 import { SPITEManager as GM } from "../../main";
 
 /**
  * Abstract game scene.
  */
-export abstract class sc_MyScene extends Phaser.Scene {
+export abstract class sc_MyScene extends Phaser.Scene implements DebugActivated {
   /**
    * group for all object to be updated
    */
   GroupAlive: Phaser.GameObjects.Group | undefined;
 
-  //#region debug
-
-  /**
-   * debugging scnee to use.
-   */
   DEBUG: DebugScene;
-
-  //#endregion debug
 
   constructor(config: Phaser.Types.Scenes.SettingsConfig, manager: GameManager) {
     config.cameras = {
@@ -60,46 +53,47 @@ export abstract class sc_MyScene extends Phaser.Scene {
 
   update(time: number, delta: number): void {
     //#region debug
-    var pointer = this.input.activePointer;
+    if (this.DEBUG.enabled) {
+      var pointer = this.input.activePointer;
 
-    let mainCam = this.cameras.main;
-    let mgmCv = GM.Camera.View;
+      let mainCam = this.cameras.main;
+      let mgmCv = GM.Camera.View;
 
-    this.DEBUG?.AddText([
-      "Mouse/////////////",
-      "x: " + pointer.x,
-      "y: " + pointer.y,
-      // "mid x: " + pointer.midPoint.x,
-      // "mid y: " + pointer.midPoint.y,
-      // "velocity x: " + pointer.velocity.x,
-      // "velocity y: " + pointer.velocity.y,
-      // "movementX: " + pointer.movementX,
-      // "movementY: " + pointer.movementY,
-      "",
-      "Scene////////////",
-      "name: " + this.scene.key,
-      // "visible: " + this.scene.isVisible(this),
-      "delta: " + delta.toFixed(2),
-      "Camera main////////////",
-      "visible: " + mainCam.visible,
-      "transparent: " + mainCam.transparent,
-      // "",
-      // "// port //",
-      // "x/y: " + mainCam.x + "/" + mainCam.y,
-      // "w/h: " + mainCam.width + "/" + mainCam.height,
-      // "cent x/y: " + mainCam.centerX + "/" + mainCam.centerY,
-      // "",
-      // "// view no zoom //",
-      // "x/y: " + mainCam.scrollX + "/" + mainCam.scrollY,
-      // "w/h: " + mainCam.width + "/" + mainCam.height,
-      // "cen x/y: " + mainCam.worldView.centerX + "/" + mainCam.worldView.centerY,
-      "",
-      "// view + zoom //",
-      "x/y: " + mgmCv.GetX(mainCam) + "/" + mgmCv.GetY(mainCam),
-      "w/h: " + mgmCv.GetWidth(mainCam) + "/" + mgmCv.GetHeight(mainCam),
-      "off w/h: " + mgmCv.GetZoomOffsetX(mainCam) + "/" + mgmCv.GetZoomOffsetY(mainCam),
-    ]);
-
+      this.DEBUG.AddText([
+        "Mouse/////////////",
+        "x: " + pointer.x,
+        "y: " + pointer.y,
+        // "mid x: " + pointer.midPoint.x,
+        // "mid y: " + pointer.midPoint.y,
+        // "velocity x: " + pointer.velocity.x,
+        // "velocity y: " + pointer.velocity.y,
+        // "movementX: " + pointer.movementX,
+        // "movementY: " + pointer.movementY,
+        "",
+        "Scene////////////",
+        "name: " + this.scene.key,
+        // "visible: " + this.scene.isVisible(this),
+        "delta: " + delta.toFixed(2),
+        "Camera main////////////",
+        "visible: " + mainCam.visible,
+        "transparent: " + mainCam.transparent,
+        // "",
+        // "// port //",
+        // "x/y: " + mainCam.x + "/" + mainCam.y,
+        // "w/h: " + mainCam.width + "/" + mainCam.height,
+        // "cent x/y: " + mainCam.centerX + "/" + mainCam.centerY,
+        // "",
+        // "// view no zoom //",
+        // "x/y: " + mainCam.scrollX + "/" + mainCam.scrollY,
+        // "w/h: " + mainCam.width + "/" + mainCam.height,
+        // "cen x/y: " + mainCam.worldView.centerX + "/" + mainCam.worldView.centerY,
+        "",
+        "// view + zoom //",
+        "x/y: " + mgmCv.GetX(mainCam) + "/" + mgmCv.GetY(mainCam),
+        "w/h: " + mgmCv.GetWidth(mainCam) + "/" + mgmCv.GetHeight(mainCam),
+        "off w/h: " + mgmCv.GetZoomOffsetX(mainCam) + "/" + mgmCv.GetZoomOffsetY(mainCam),
+      ]);
+    }
 
     //#endregion debug
   }

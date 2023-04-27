@@ -1,11 +1,23 @@
 import { SPITEManager as GM } from "../main";
 import sc_Hud from "./abstract/sc_HUD";
 
+export type DebugActivated = {
+  /**
+   * debugging scnee to use.
+   */
+  DEBUG: DebugScene;
+};
+
 /**
  * Debug Scene.
  * handles debug scene for displaying.
  */
 export class DebugScene extends sc_Hud {
+  /**
+   * if debug is enabled
+   */
+  enabled = true;
+
   /**
    * targeted scene for debug functions.
    */
@@ -44,16 +56,20 @@ export class DebugScene extends sc_Hud {
   }
 
   update(): void {
-    super.update();
+    if (this.enabled) {
+      super.update();
 
-    this.Print();
+      this.Print();
 
-    //move game graph to top if it isnt in top position.
-    if (this.targetScene && this.gameGraph && this.targetScene != this) {
-      let chList = this.targetScene.children.list;
-      if (chList[chList.length - 1] != this.gameGraph) this.targetScene.children.bringToTop(this.gameGraph);
+      //move game graph to top if it isnt in top position.
+      if (this.targetScene && this.gameGraph && this.targetScene != this) {
+        if (this.gameGraph.scene != undefined) {
+          if (!GM.GmObj.Order.isTop(this.gameGraph)) this.targetScene.children.bringToTop(this.gameGraph);
+        }
 
-      this.gameGraph.clear();
+        this.gameGraph.clear();
+        this.AddText(["FPS: " + this.game.loop.actualFps]);
+      }
     }
   }
 

@@ -28,13 +28,11 @@ export default class sc_Init extends sc_MyScene {
     super.create();
 
     this.scene.start(GM.Scene.UniqueAdd(this.scene, sc_MainMenu) ?? undefined);
-
   }
 
   update(): void {
     // console.log("sc_Init update");
 
-    
     this.DEBUG.AddText(["TEST"]);
   }
 }
