@@ -24,7 +24,7 @@ export class DebugScene extends sc_Hud {
   targetScene: Phaser.Scene | undefined;
   textObj: Phaser.GameObjects.Text | undefined;
   displayText = new Array<string>();
-  inputkey: Phaser.Input.Keyboard.Key | undefined;
+  inputkeys = { up: Phaser.Input.Keyboard.KeyCodes.W, down: Phaser.Input.Keyboard.KeyCodes.S };
   /** graphics in game scene */
   gameGraph: Phaser.GameObjects.Graphics | undefined;
   /**
@@ -44,7 +44,10 @@ export class DebugScene extends sc_Hud {
     super.create();
 
     this.textObj = this.add.text(0, 0, "DEBUG", { color: "#00ff00", font: "16px Courier" });
-    this.inputkey = this.input.keyboard?.addKey("J", true, false);
+
+    let inp = this.input.keyboard?.addKeys(this.inputkeys);
+
+    console.log(this.inputkeys, inp);
 
     this.gameGraph = this.add.graphics({
       x: 0,

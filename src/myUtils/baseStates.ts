@@ -125,22 +125,22 @@ export abstract class BaseStateClass extends StateMovement implements StateObjec
   /**
    * Base State.
    *
-   * sets objects base state.
-   * @param newState new base state.
+   * gets objects base state.
    */
-  baseSet(newState: BaseState) {
-    this._baseStateUnset(this._baseState);
-
-    this._baseStateSet(newState);
+  StateGet(): BaseState {
+    return this._baseState;
   }
 
   /**
    * Base State.
    *
-   * gets objects base state.
+   * sets objects base state.
+   * @param newState new base state.
    */
-  baseGet(): BaseState {
-    return this._baseState;
+  StateSet(newState: BaseState) {
+    this._baseStateUnset(this._baseState);
+
+    this._baseStateSet(newState);
   }
 
   //  /**

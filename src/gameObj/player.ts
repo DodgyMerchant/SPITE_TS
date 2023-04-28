@@ -1,23 +1,46 @@
 import { PBIClass } from "./abstract/PBI";
-import { BaseState, BaseStateClass } from "../myUtils/baseStates";
-import { ComplexState, StateClass } from "../myUtils/states";
+import { BaseState } from "../myUtils/baseStates";
+import { ComplexState, StateClass, StateMultiClass } from "../myUtils/states";
 import MyMath from "../myUtils/MyMath";
 import { sc_MyScene } from "../scenes/abstract/sc_MyScene";
-import { gameManager } from "../main";
+import { DebugScene } from "../scenes/DebugScene";
 
-class PlayerState extends StateClass implements ComplexState {
+type UpdateFunc =
+  /**
+   * @param player
+   * @param fm fixed multipler to counter frame time difference.
+   * @param time
+   * @param delta delta time in ms.
+   */
+  (player: Player, fm: number, time: number, delta: number) => void;
+
+type UpdateState = {
+  /**
+   * function run every step.
+   */
+  readonly stateUpdate: UpdateFunc;
+};
+
+/**
+ * player substate for player state machine.
+ */
+class PlayerStateLeaf extends StateClass implements ComplexState, UpdateState {
   /**
    *
-   * @param name name of the enum.
+   * @param name name of the state.
    * @param recovery Stamina recovery amount.
    * @param time Stamina recovery time.
+   * @param stateUpdate Stamina recovery time.
    */
-  constructor(name: string, baseState: BaseState, recovery: number, time: number) {
+  constructor(name: string, baseState: BaseState, recovery: number, time: number, stateUpdate: UpdateFunc) {
     super(name);
     this.baseState = baseState;
     this.staminaRecovery = recovery;
     this.staminaTime = time;
+
+    this.stateUpdate = stateUpdate;
   }
+  stateUpdate: UpdateFunc;
 
   /**
    * Base state.
@@ -33,12 +56,49 @@ class PlayerState extends StateClass implements ComplexState {
   readonly staminaTime: number;
 
   apply(player: Player): void {
-    player.baseSet(player.playerState.baseState);
+    player.StateSet(this.baseState);
 
     player.StaminaSet(this.staminaRecovery, this.staminaTime);
   }
   undo(player: Player): void {}
 }
+
+/**
+ * player state for player state machine.
+ */
+class PlayerStateBranch extends StateMultiClass<PlayerState> implements UpdateState {
+  /**
+   *
+   * @param name
+   * @param stateInit
+   * @param stateMap
+   * @param stateUpdate function run every frame
+   */
+  constructor(
+    name: string,
+    stateInit: string,
+    stateMap: Map<string, PlayerState>,
+    stateUpdate: UpdateFunc = (player: Player, fm: number, time: number, delta: number) => {
+      this.StateGet().stateUpdate(player, fm, time, delta);
+    }
+  ) {
+    // super(name, stateMap.get(stateInit) ?? new PlayerStateLeaf("ERROR", Player.BASE_STATES.FROZEN, 0, 0, () => {}));
+
+    let s = stateMap.get(stateInit);
+
+    if (s) super(name, s);
+    else throw new Error("nothing found in state map!");
+
+    this.stateMap = stateMap;
+
+    this.stateUpdate = stateUpdate;
+  }
+
+  stateMap: Map<string, PlayerState>;
+  stateUpdate: UpdateFunc;
+}
+
+type PlayerState = PlayerStateLeaf | PlayerStateBranch;
 
 /**
  * player Object class
@@ -63,7 +123,7 @@ export class Player extends PBIClass {
     frame?: string | number | undefined,
     state: PlayerState = Player.PLAYER_STATES.IDLE
   ) {
-    super(scene, x, y, texture, frame, state.baseState);
+    super(scene, x, y, texture, frame, Player.BASE_STATES.FREE);
 
     //red tint
     this.setTint(this.ColorDefault);
@@ -109,14 +169,65 @@ export class Player extends PBIClass {
    * Player states
    */
   static readonly PLAYER_STATES = {
-    IDLE: new PlayerState("idle", BaseStateClass.BASE_STATES.FREE, 1, 60 * 1),
-    DOWNED: new PlayerState("downed", BaseStateClass.BASE_STATES.FREE, 0, 0),
-    COMBAT: new PlayerState("combat", BaseStateClass.BASE_STATES.FREE, 0, 0),
-    EXHAUSTED: new PlayerState("exhausted", BaseStateClass.BASE_STATES.FREE, 0, 0),
+    IDLE: new PlayerStateLeaf(
+      "idle",
+      Player.BASE_STATES.FREE,
+      1,
+      60 * 1,
+      (player: Player, fm: number, time: number, delta: number) => {
+        if (player.playerInput?.D.isDown) {
+          player.setX(player.x + 1 * fm);
+        }
+        if (player.playerInput?.A.isDown) {
+          player.setX(player.x - 1 * fm);
+        }
+        if (player.playerInput?.W.isDown) {
+          player.StaminaHit(-player.stamMax);
+        }
+      }
+    ),
+    COMBAT: new PlayerStateBranch(
+      "combat",
+      "combat_idle",
+      new Map<string, PlayerState>([
+        [
+          "combat_idle",
+          new PlayerStateLeaf("free", Player.BASE_STATES.FREE, 1, 60 * 1, (player: Player, time: number, delta: number) => {}),
+        ],
+        [
+          "combat_attack",
+          new PlayerStateBranch(
+            "test",
+            "test1",
+            new Map([
+              [
+                "test1",
+                new PlayerStateLeaf("1", Player.BASE_STATES.FREE, 1, 60 * 1, (player: Player, time: number, delta: number) => {}),
+              ],
+            ])
+          ),
+        ],
+      ])
+    ),
+    // DOWNED: new PlayerStateBranch("downed"),
+    // EXHAUSTED: new PlayerStateBranch("exhausted"),
+
+    /**
+     * new PlayerStateBranch(
+     *      "test",
+     *      "test1",
+     *      new Map([
+     *        [
+     *          "test1",
+     *          new PlayerStateLeaf("1", Player.BASE_STATES.FREE, 1, 60 * 1, (player: Player, time: number, delta: number) => {}),
+     *        ],
+     *      ])
+     *    ),
+     */
   };
 
   //#endregion states
-  //#region stamina
+  //#region stamina system
 
   readonly stamMax: number = 100;
   stamina = this.stamMax;
@@ -286,7 +397,7 @@ export class Player extends PBIClass {
     }
   }
 
-  //#endregion stamina
+  //#endregion stamina system
 
   // protected preUpdate(time: number, delta: number): void {
   //   this.anims.update(time, delta);
@@ -295,20 +406,10 @@ export class Player extends PBIClass {
   update(time: number, delta: number): void {
     super.update(time, delta);
 
-    let _fm = this.FixedMult(delta);
-
     //stamina
     this.StaminaUpdate(time, delta);
 
-    if (this.playerInput?.D.isDown) {
-      this.setX(this.x + 1 * _fm);
-    }
-    if (this.playerInput?.A.isDown) {
-      this.setX(this.x - 1 * _fm);
-    }
-    if (this.playerInput?.W.isDown) {
-      this.StaminaHit(-this.stamMax);
-    }
+    this._playerState.stateUpdate(this, this.FixedMult(delta), time, delta);
 
     // console.log("delta: ", delta.toFixed(2));
   }

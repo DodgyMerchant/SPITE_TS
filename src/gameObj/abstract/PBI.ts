@@ -19,6 +19,7 @@ import { sc_MyScene } from "../../scenes/abstract/sc_MyScene";
 export type PBI_List = Array<number>;
 
 export class PBIClass extends BaseStateClass {
+  
   /**
    *
    * @param scene The Scene to which this Game Object belongs. A Game Object can only belong to one Scene at a time.
