@@ -3,7 +3,6 @@ import { BaseState } from "../myUtils/baseStates";
 import { ComplexState, StateClass, StateMultiClass } from "../myUtils/states";
 import MyMath from "../myUtils/MyMath";
 import { sc_MyScene } from "../scenes/abstract/sc_MyScene";
-import { DebugScene } from "../scenes/DebugScene";
 
 type UpdateFunc =
   /**
@@ -22,7 +21,7 @@ type UpdateState = {
 };
 
 /**
- * player substate for player state machine.
+ * Player complex substate for player state machine.
  */
 class PlayerStateLeaf extends StateClass implements ComplexState, UpdateState {
   /**
@@ -64,15 +63,18 @@ class PlayerStateLeaf extends StateClass implements ComplexState, UpdateState {
 }
 
 /**
- * player state for player state machine.
+ * Complex State with complex substates.
+ * Must have atleast one substate.
  */
 class PlayerStateBranch extends StateMultiClass<PlayerState> implements UpdateState {
   /**
    *
+   * if you specify a custom update method:
+   * DO NOT FORGET to call the substates stateUpdate with "this.StateGet().stateUpdate(player, fm, time, delta);"
    * @param name
    * @param stateInit
    * @param stateMap
-   * @param stateUpdate function run every frame
+   * @param stateUpdate function run every frame. Defaults to an empty method that only calls the substates update. DO NOT FORGET to call the substates stateUpdate with "this.StateGet().stateUpdate(player, fm, time, delta);"
    */
   constructor(
     name: string,
@@ -86,6 +88,7 @@ class PlayerStateBranch extends StateMultiClass<PlayerState> implements UpdateSt
 
     let s = stateMap.get(stateInit);
 
+    //error if default state isnt found in state map.
     if (s) super(name, s);
     else throw new Error("nothing found in state map!");
 
@@ -169,42 +172,28 @@ export class Player extends PBIClass {
    * Player states
    */
   static readonly PLAYER_STATES = {
-    IDLE: new PlayerStateLeaf(
-      "idle",
-      Player.BASE_STATES.FREE,
-      1,
-      60 * 1,
-      (player: Player, fm: number, time: number, delta: number) => {
-        if (player.playerInput?.D.isDown) {
-          player.setX(player.x + 1 * fm);
-        }
-        if (player.playerInput?.A.isDown) {
-          player.setX(player.x - 1 * fm);
-        }
-        if (player.playerInput?.W.isDown) {
-          player.StaminaHit(-player.stamMax);
-        }
+    IDLE: new PlayerStateLeaf("idle", Player.BASE_STATES.FREE, 1, 60 * 1, (player: Player, fm: number) => {
+      if (player.playerInput?.D.isDown) {
+        player.setX(player.x + 1 * fm);
       }
-    ),
+      if (player.playerInput?.A.isDown) {
+        player.setX(player.x - 1 * fm);
+      }
+      if (player.playerInput?.W.isDown) {
+        player.StaminaHit(-player.stamMax);
+      }
+    }),
     COMBAT: new PlayerStateBranch(
       "combat",
       "combat_idle",
       new Map<string, PlayerState>([
-        [
-          "combat_idle",
-          new PlayerStateLeaf("free", Player.BASE_STATES.FREE, 1, 60 * 1, (player: Player, time: number, delta: number) => {}),
-        ],
+        ["combat_idle", new PlayerStateLeaf("free", Player.BASE_STATES.FREE, 1, 60 * 1, (player: Player, fm: number) => {})],
         [
           "combat_attack",
           new PlayerStateBranch(
             "test",
             "test1",
-            new Map([
-              [
-                "test1",
-                new PlayerStateLeaf("1", Player.BASE_STATES.FREE, 1, 60 * 1, (player: Player, time: number, delta: number) => {}),
-              ],
-            ])
+            new Map([["test1", new PlayerStateLeaf("1", Player.BASE_STATES.FREE, 1, 60 * 1, (player: Player, fm: number) => {})]])
           ),
         ],
       ])

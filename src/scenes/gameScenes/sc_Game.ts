@@ -634,12 +634,12 @@ export default class sc_Game extends sc_MyScene {
           "x/y: " + this.player.x + "/" + this.player.y,
           "origin x/y: " + this.player.displayOriginX + "/" + this.player.displayOriginY,
           "State///////////",
-          "base: " + this.player.playerState.toString(),
-          "base state" + this.player.StateGet().toString(),
+          "state: " + this.player.playerState.toString(),
+          "b.state: " + this.player.StateGet().toString(),
           "Stamina//////////",
           "stam: " + this.player.stamina + " / " + this.player.stamMax,
           "tick: " + this.player._stamTick,
-          "tick: " + this.player._stamTimeCount + " / " + this.player._stamTime,
+          "time: " + this.player._stamTimeCount + " / " + this.player._stamTime,
         ]);
 
         let anFr = this.player.anims.currentFrame;
