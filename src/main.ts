@@ -37,6 +37,12 @@ const config: Phaser.Types.Core.GameConfig = {
     forceSetTimeOut: true,
     target: 60,
   },
+  input: {
+    keyboard: true,
+    gamepad: true,
+    
+  },
+  
 };
 
 // type MegaAnim = {
