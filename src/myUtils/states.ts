@@ -91,6 +91,60 @@ export type StateComplexObject<StateType> = {
 };
 
 /**
+ * interface for nested states.
+ * So that a nested state can refrence the parent.
+ */
+export interface NestedStateInterface<IndexType, ParentType extends MultiStateInterface<IndexType> | undefined> {
+  /**
+   * multi state parent
+   */
+  parent: ParentType | undefined;
+}
+
+/**
+ * root of nested interfaces.
+ * nested states cant reach beyond that as parent refrence will always be undefined.
+ */
+export interface RootStateInterface<IndexType> extends NestedStateInterface<IndexType, undefined> {
+  /**
+   * @override
+   * End of nested states.
+   */
+  parent: undefined;
+}
+
+/**
+ * interface for nested states.
+ * So that a nested state can change the state of any state up the chain.
+ */
+export interface MultiStateInterface<IndexType> {
+  /**
+   * finds state up the chain and switches the state with another state.
+   * @param fromState
+   * @param toState
+   */
+  MultiStateSwitch(stateObj: object, fromState: IndexType, toState: IndexType): boolean;
+}
+
+/**
+ * state that runs an update every step, apply and undo.
+ */
+export interface ActiveComplexState extends ComplexState {
+  /**
+   * function run every step.
+   */
+  stateUpdate: Function;
+  /**
+   * function run once on change to (apply) or from (undo) this stare.
+   */
+  stateApply: Function | undefined;
+  /**
+   * function run once on change to (apply) or from (undo) this stare.
+   */
+  stateUndo: Function | undefined;
+}
+
+/**
  * A state that has a substate.
  * Wich is in itself a multi state or a complex state.
  */

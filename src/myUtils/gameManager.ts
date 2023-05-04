@@ -12,6 +12,11 @@ export class GameManager {
    */
   FPS_Target: number;
 
+  /**
+   * one second calculated in frames.
+   */
+  OneSec: number;
+
   Scales = {
     PortWidth: 800,
     PortHeight: 800,
@@ -27,6 +32,7 @@ export class GameManager {
     this.Game = new Phaser.Game(GameConfig);
 
     this.FPS_Target = this.Game.loop.targetFps;
+    this.OneSec = this.Game.loop.targetFps;
 
     console.log("Used renderer: ", this.Game.renderer.constructor.name);
   }

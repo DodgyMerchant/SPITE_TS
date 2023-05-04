@@ -45,7 +45,7 @@ export default class MyMath {
    * @returns {{x: number, y: number}}
    */
   static findNewPoint(x: number, y: number, angle: number, distance: number): { x: number; y: number } {
-    let result = {};
+    let result = { x: 0, y: 0 };
 
     result.x = Math.round(Math.cos((angle * Math.PI) / 180) * distance + x);
     result.y = Math.round(Math.sin((angle * Math.PI) / 180) * distance + y);

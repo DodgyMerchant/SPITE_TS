@@ -81,13 +81,4 @@ declare namespace MyPhaserTypes {
     }
   }
 
-  /**
-   *
-   */
-  type StateUpdateFunc =
-    /**
-     * @param time
-     * @param delta delta time in ms.
-     */
-    (time: number, delta: number) => void;
 }

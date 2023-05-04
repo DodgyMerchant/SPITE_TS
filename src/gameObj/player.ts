@@ -1,43 +1,49 @@
 import { PBIClass } from "./abstract/PBI";
 import { BaseState } from "../myUtils/baseStates";
-import { ComplexState, StateClass, StateMultiClass } from "../myUtils/states";
+import {
+  ActiveComplexState,
+  MultiStateInterface,
+  NestedStateInterface,
+  RootStateInterface,
+  StateClass,
+  StateMultiClass,
+} from "../myUtils/states";
 import MyMath from "../myUtils/MyMath";
 import { sc_MyScene } from "../scenes/abstract/sc_MyScene";
 import { MyInputBundle, MyKeyboardInput } from "../scenes/gameScenes/sc_Game";
+import { gameManager } from "../main";
 
 //#region player multi state
 
 /**
  * function run every step.
- * @param player Player Object
+ * @param nextState next state up the chain. THIS state the function is belongs to.
  * @param fm fixed multipler to counter frame time difference.
  * @param time
  * @param delta delta time in ms.
  */
-type StateUpdateFunc = (player: Player, fm: number, time: number, delta: number) => void;
+type StateUpdateFunc = (nextState: PlayerState, fm: number, time: number, delta: number) => void;
 
 /**
  * function run once on change to (apply) or from (undo) this stare.
  * @param player Player Object
  */
-type StateApplyFunc = (player: Player) => void;
-
-type PlayerState = ComplexState & {
-  /**
-   * function run every step.
-   */
-  readonly stateUpdate: StateUpdateFunc;
-  /**
-   * function run once on change to (apply) or from (undo) this stare.
-   */
-  readonly stateApply: StateUpdateFunc | undefined;
-  /**
-   * function run once on change to (apply) or from (undo) this stare.
-   */
-  readonly stateUndo: StateUpdateFunc | undefined;
-};
+type StateApplyFunc = (nextState: PlayerState) => void;
 
 type PlayerStateLeafConf = {
+  /*
+  key: ,
+  name: ,
+  baseState: ,
+  staminaRecovery: ,
+  staminaTime: ,
+  stateUpdate: ,
+  stateApply?: ,
+  stateUndo?: ,
+  */
+  /**
+   *
+   */
   key: string;
   /**
    * name of the state.
@@ -72,7 +78,7 @@ type PlayerStateLeafConf = {
 /**
  * Player complex substate for player state machine.
  */
-class PlayerStateLeaf extends StateClass implements PlayerState {
+class PlayerStateLeaf extends StateClass implements NestedStateInterface<string, PlayerStateBranch>, ActiveComplexState {
   /**
    *
    * @param name name of the state.
@@ -84,6 +90,7 @@ class PlayerStateLeaf extends StateClass implements PlayerState {
    * @param stateUndo function run on switch from this state to another.
    */
   constructor(
+    parent: PlayerStateBranch | undefined,
     name: string,
     baseState: BaseState,
     staminaRecovery: number,
@@ -100,7 +107,10 @@ class PlayerStateLeaf extends StateClass implements PlayerState {
     this.stateUpdate = stateUpdate;
     this.stateApply = stateApply;
     this.stateUndo = stateUndo;
+
+    this.parent = parent;
   }
+  parent: PlayerStateBranch | undefined;
 
   /**
    * function run every step.
@@ -133,18 +143,25 @@ class PlayerStateLeaf extends StateClass implements PlayerState {
 
     player.StaminaSet(this.staminaRecovery, this.staminaTime);
 
-    if (this.stateApply) this.stateApply(player);
+    if (this.stateApply) this.stateApply(this);
   }
-  undo(player: Player): void {
-    if (this.stateUndo) this.stateUndo(player);
+  undo(_player: Player): void {
+    if (this.stateUndo) this.stateUndo(this);
   }
 }
 
 type PlayerStateBranchConf = {
+  /*
+  key: ,
+  name: ,
+  stateInit: ,
+  stateMap: ,
+  stateUpdate: ,
+  */
   key: string;
   name: string;
   stateInit: string;
-  stateMap: Map<string, PlayerState>;
+  stateList: (PlayerStateLeafConf | PlayerStateBranchConf)[];
   stateUpdate: StateUpdateFunc | undefined;
 };
 
@@ -152,42 +169,106 @@ type PlayerStateBranchConf = {
  * Complex State with complex substates.
  * Must have atleast one substate.
  */
-class PlayerStateBranch extends StateMultiClass<PlayerState> implements PlayerState {
+class PlayerStateBranch
+  extends StateMultiClass<PlayerState>
+  implements NestedStateInterface<string, MultiStateInterface<string>>, MultiStateInterface<string>
+{
   /**
    *
    * if you specify a custom update method:
    * DO NOT FORGET to call the substates stateUpdate with "this.StateGet().stateUpdate(player, fm, time, delta);"
+   * @param parent parent object refrence
    * @param name name
    * @param stateInit
-   * @param stateMap
+   * @param stateList
    * @param stateUpdate function run every frame. Defaults to an empty method that only calls the substates update. DO NOT FORGET to call the substates stateUpdate with "this.StateGet().stateUpdate(player, fm, time, delta);"
    */
   constructor(
+    parent: PlayerStateBranch | undefined,
     name: string,
     stateInit: string,
-    stateMap: Map<string, PlayerState>,
-    stateUpdate: StateUpdateFunc = (player: Player, fm: number, time: number, delta: number) => {
-      this.StateGet().stateUpdate(player, fm, time, delta);
+    stateList: (PlayerStateLeafConf | PlayerStateBranchConf)[],
+    stateUpdate: StateUpdateFunc = (_nextState: PlayerState, fm: number, time: number, delta: number) => {
+      let state = this.StateGet();
+      state.stateUpdate(state, fm, time, delta);
     }
   ) {
     // super(name, stateMap.get(stateInit) ?? new PlayerStateLeaf("ERROR", Player.BASE_STATES.FROZEN, 0, 0, () => {}));
 
-    let s = stateMap.get(stateInit);
+    let stateMap = new Map<string, PlayerState>();
+    let confLeafCheck = function (conf: PlayerStateLeafConf | PlayerStateBranchConf): conf is PlayerStateLeafConf {
+      return (<PlayerStateLeafConf>conf).baseState !== undefined;
+    };
+    let conf;
+    for (let i = 0; i < stateList.length; i++) {
+      conf = stateList[i];
 
+      if (confLeafCheck(conf)) {
+        //is Leaf
+
+        stateMap.set(
+          conf.key,
+          new PlayerStateLeaf(
+            undefined,
+            conf.name,
+            conf.baseState,
+            conf.staminaRecovery,
+            conf.staminaTime,
+            conf.stateUpdate,
+            conf.stateApply,
+            conf.stateUndo
+          )
+        );
+      } else {
+        //is branch
+        stateMap.set(conf.key, new PlayerStateBranch(undefined, conf.name, conf.stateInit, conf.stateList, conf.stateUpdate));
+      }
+    }
+
+    //get default state
+    let s = stateMap.get(stateInit);
     //error if default state isnt found in state map.
     if (s) super(name, s);
     else throw new Error("nothing found in state map!");
 
+    //add parent refrence after "this" exists.
+    stateMap.forEach((state) => {
+      state.parent = this;
+    });
+
     this.stateMap = stateMap;
 
     this.stateUpdate = stateUpdate;
+
+    this.parent = parent;
   }
+  stateMap: Map<string, PlayerState>;
   stateApply: StateUpdateFunc | undefined;
   stateUndo: StateUpdateFunc | undefined;
-
-  stateMap: Map<string, PlayerState>;
   stateUpdate: StateUpdateFunc;
+
+  MultiStateSwitch(player: Player, fromState: string, toState: string): boolean {
+    console.log(this);
+    if (this.stateMap.has(fromState)) {
+      let state = this.stateMap.get(toState);
+
+      if (state) {
+        this.StateSet(player, state);
+        return true;
+      }
+    }
+    //doesnt have from or from and to state.
+    if (this.parent) {
+      return this.parent.MultiStateSwitch(player, fromState, toState);
+    }
+
+    return false;
+  }
+
+  parent: PlayerStateBranch | Player | undefined;
 }
+
+type PlayerState = PlayerStateBranch | PlayerStateLeaf;
 
 //#endregion player multi state
 //#region input
@@ -230,10 +311,17 @@ export class PlayerInput implements MyKeyboardInput {
 
 //#endregion input
 
+enum PLAYER_STATES {
+  IDLE = "IDLE",
+  COMBAT = "COMBAT",
+  DOWNED = "DOWNED",
+  EXHAUSTED = "EXHAUSTED",
+}
+
 /**
  * player Object class
  */
-export class Player extends PBIClass {
+export class Player extends PBIClass implements MultiStateInterface<string>, RootStateInterface<string> {
   /**
    * create a Player Object.
    * @param scene The Scene to which this Game Object belongs. A Game Object can only belong to one Scene at a time.
@@ -250,7 +338,7 @@ export class Player extends PBIClass {
     playerInput: PlayerInput,
     texture: string | Phaser.Textures.Texture,
     frame?: string | number | undefined,
-    state: PlayerState = Player.PLAYER_STATES.IDLE
+    state: PLAYER_STATES = PLAYER_STATES.IDLE
   ) {
     super(scene, x, y, texture, frame, Player.BASE_STATES.FREE, (vec2: Phaser.Math.Vector2) => {
       vec2
@@ -267,8 +355,15 @@ export class Player extends PBIClass {
     this.setTint(this.ColorDefault);
 
     //state
-    this._playerState = state;
-    this._playerState.apply(this);
+    // this._playerState = this.STATES.get(state);
+
+    //get default state
+    let s = this.stateMap.get(state);
+    //error if default state isnt found in state map.
+    if (s) this._playerState = s;
+    else throw new Error("nothing found in state map!");
+
+    this.playerState = s;
 
     // this.scene.game.
   }
@@ -294,95 +389,6 @@ export class Player extends PBIClass {
   moveSpeed = 0;
 
   //#endregion speed
-  //#region states
-
-  private _playerState: PlayerState;
-  public get playerState(): PlayerState {
-    return this._playerState;
-  }
-  public set playerState(value: PlayerState) {
-    this._playerState.undo(this);
-    this._playerState = value;
-    this._playerState.apply(this);
-  }
-
-  /**
-   * Player states
-   */
-  static readonly PLAYER_STATES = {
-    IDLE: new PlayerStateBranch(
-      "Idle",
-      "idle",
-      new Map<string, PlayerState>([
-        [
-          "idle",
-          new PlayerStateLeaf(
-            "idle",
-            Player.BASE_STATES.FREE,
-            1,
-            60 * 1,
-            (p: Player, fm: number) => {
-              if (p.pInput.RUN.isDown) {
-                console.log("run?");
-              }
-            },
-            (p: Player) => {
-              p.moveSpeed = 0.1;
-            }
-          ),
-        ],
-        [
-          "run",
-          new PlayerStateLeaf(
-            "run",
-            Player.BASE_STATES.FREE,
-            -0.5,
-            0,
-            (p: Player, fm: number) => {},
-            (p: Player) => {
-              p.moveSpeed = 0.25;
-            }
-          ),
-        ],
-      ])
-    ),
-    COMBAT: new PlayerStateBranch(
-      "Combat",
-      "idle",
-      new Map<string, PlayerState>([
-        ["idle", new PlayerStateLeaf("idle", Player.BASE_STATES.FREE, 1, 60 * 1, (p: Player, fm: number) => {})],
-        [
-          "attack",
-          new PlayerStateBranch(
-            "attack",
-            "ready",
-            new Map([
-              ["ready", new PlayerStateLeaf("ready", Player.BASE_STATES.FREE, 1, 60 * 1, (p: Player, fm: number) => {})],
-              ["hold", new PlayerStateLeaf("hold", Player.BASE_STATES.FREE, 1, 60 * 1, (p: Player, fm: number) => {})],
-              ["slash", new PlayerStateLeaf("slash", Player.BASE_STATES.FREE, 1, 60 * 1, (p: Player, fm: number) => {})],
-            ])
-          ),
-        ],
-      ])
-    ),
-    // DOWNED: new PlayerStateBranch("downed"),
-    // EXHAUSTED: new PlayerStateBranch("exhausted"),
-
-    /**
-     * new PlayerStateBranch(
-     *      "test",
-     *      "test1",
-     *      new Map([
-     *        [
-     *          "test1",
-     *          new PlayerStateLeaf("1", Player.BASE_STATES.FREE, 1, 60 * 1, (player: Player, time: number, delta: number) => {}),
-     *        ],
-     *      ])
-     *    ),
-     */
-  };
-
-  //#endregion states
   //#region stamina system
 
   readonly stamMax: number = 100;
@@ -409,7 +415,7 @@ export class Player extends PBIClass {
    * OR stamina system is disabled.
    */
   public get staminaEmpty() {
-    return this.stamina == 0 && this._staminaEnabled;
+    return this.stamina <= 0 && this._staminaEnabled;
   }
 
   /**
@@ -554,6 +560,105 @@ export class Player extends PBIClass {
   }
 
   //#endregion stamina system
+  //#region states
+
+  MultiStateSwitch(_player: object, fromState: string, toState: string): boolean {
+    if (this.stateMap.has(fromState)) {
+      let state = this.stateMap.get(toState);
+
+      if (state) {
+        this.playerState = state;
+        return true;
+      }
+    }
+
+    console.error("Player State Switch: State Not found! from: ", fromState, " toState: ", toState);
+    return false;
+  }
+
+  parent: undefined = undefined;
+
+  /**
+   * complex nested player state
+   */
+  private _playerState: PlayerState;
+  /**
+   * complex nested player state
+   */
+  public get playerState(): PlayerState {
+    return this._playerState;
+  }
+  public set playerState(state: PlayerState) {
+    this._playerState.undo(this);
+    this._playerState = state;
+    state.parent = this;
+    this._playerState.apply(this);
+  }
+
+  /**
+   * Player states
+   */
+  stateMap = new Map<string, PlayerState>([
+    //IDLE
+    [
+      PLAYER_STATES.IDLE,
+      new PlayerStateBranch(undefined, "IDLE", "idle", [
+        //idle idle
+        {
+          key: "idle",
+          name: "idle",
+          baseState: Player.BASE_STATES.FREE,
+          staminaRecovery: 1,
+          staminaTime: gameManager.FPS_Target * 1,
+          stateUpdate: (state: PlayerState, _fm: number) => {
+            //run input switch to run state
+            if (this.pInput.RUN.isDown) {
+              state.parent?.MultiStateSwitch(this, "idle", "run");
+            }
+          },
+          stateApply: (state: PlayerState) => {
+            this.moveSpeed = 0.1;
+          },
+        },
+        //idle run
+        {
+          key: "run",
+          name: "run",
+          baseState: Player.BASE_STATES.FREE,
+          staminaRecovery: -(this.stamMax / (gameManager.FPS_Target * 3)),
+          staminaTime: 0,
+          stateUpdate: (state: PlayerState, fm: number) => {
+            if (this.pInput.RUN.isUp) {
+              state.parent?.MultiStateSwitch(this, "run", "idle");
+            }
+            if (this.staminaEmpty) {
+              state.parent?.MultiStateSwitch(this, PLAYER_STATES.IDLE, PLAYER_STATES.EXHAUSTED);
+            }
+          },
+          stateApply: (state: PlayerState) => {
+            this.moveSpeed = 0.25;
+          },
+        },
+      ]),
+    ],
+    //EXHAUSTED
+    [
+      PLAYER_STATES.EXHAUSTED,
+      new PlayerStateLeaf(
+        undefined,
+        "exhausted",
+        Player.BASE_STATES.FROZEN,
+
+        this.stamMax / (gameManager.FPS_Target * 5),
+        0,
+        (state) => {
+          if (this.stamina == this.stamMax) state.parent?.MultiStateSwitch(this, PLAYER_STATES.EXHAUSTED, PLAYER_STATES.IDLE);
+        }
+      ),
+    ],
+  ]);
+
+  //#endregion states
 
   // protected preUpdate(time: number, delta: number): void {
   //   this.anims.update(time, delta);
@@ -565,7 +670,9 @@ export class Player extends PBIClass {
     //stamina
     this.StaminaUpdate(time, delta);
 
-    this._playerState.stateUpdate(this, this.FixedMult(delta), time, delta);
+    // this._playerState.stateUpdate(this, this.FixedMult(delta), time, delta);
+    // console.log(this._playerState.name);
+    this._playerState.stateUpdate(this._playerState, this.FixedMult(delta), time, delta);
 
     // console.log("delta: ", delta.toFixed(2));
   }
