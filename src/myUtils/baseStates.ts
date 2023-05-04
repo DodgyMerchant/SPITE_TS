@@ -1,5 +1,5 @@
 import { sc_MyScene } from "../scenes/abstract/sc_MyScene";
-import { InputFunction } from "./stateMoveInput";
+import { MoveInputFunction } from "./stateMoveInput";
 import { StateMovement } from "./stateMovement";
 import { ComplexState, StateObject } from "./states";
 
@@ -97,7 +97,7 @@ export abstract class BaseStateClass extends StateMovement implements StateObjec
     texture: string | Phaser.Textures.Texture,
     frame: string | number | undefined,
     state: BaseState = BaseStateClass.BASE_STATES.FREE,
-    inputMeth?: InputFunction
+    inputMeth?: MoveInputFunction
   ) {
     super(scene, x, y, texture, frame, inputMeth, undefined, undefined, undefined);
 
@@ -150,23 +150,4 @@ export abstract class BaseStateClass extends StateMovement implements StateObjec
   //    * @type {Phaser.Math.Vector2} type
   //    */
   //   workVec: Phaser.Math.Vector2 = new Phaser.Math.Vector2();
-
-  // /**
-  //  * runs continuously
-  //  * moves obj
-  //  */
-  // stateUpdate() {
-  //   if (this.moveCanMoveGet() && this.inputCheck(inputVec) && this.moveInputMethod) {
-  //     // let _x = this.workVec.x;
-  //     // let _y = this.workVec.y;
-  //     let _spd = this.moveGetSpeed();
-
-  //     //applying movement speed
-  //     this.workVec.scale(_spd);
-
-  //     //apply movmeent
-  //     super.phyMoveAdd(this.workVec);
-  //     // this.thrust(this.workVec.length()); does the same thing
-  //   }
-  // }
 }

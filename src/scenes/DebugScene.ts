@@ -16,7 +16,23 @@ export class DebugScene extends sc_Hud {
   /**
    * if debug is enabled
    */
-  enabled = true;
+  private _enabled = false;
+  public get enabled() {
+    return this._enabled;
+  }
+  public set enabled(bool) {
+    this._enabled = bool;
+
+    if (this.textObj) {
+      this.textObj.visible = bool;
+    }
+    if (this.gameGraph) {
+      this.gameGraph.visible = bool;
+    }
+
+    if (!bool) {
+    }
+  }
 
   /**
    * targeted scene for debug functions.
@@ -24,7 +40,7 @@ export class DebugScene extends sc_Hud {
   targetScene: Phaser.Scene | undefined;
   textObj: Phaser.GameObjects.Text | undefined;
   displayText = new Array<string>();
-  inputkeys = { up: Phaser.Input.Keyboard.KeyCodes.W, down: Phaser.Input.Keyboard.KeyCodes.S };
+  inputkeys: { activate: Phaser.Input.Keyboard.Key } | undefined = undefined;
   /** graphics in game scene */
   gameGraph: Phaser.GameObjects.Graphics | undefined;
   /**
@@ -43,11 +59,21 @@ export class DebugScene extends sc_Hud {
   create() {
     super.create();
 
+    this.enabled = true;
+
     this.textObj = this.add.text(0, 0, "DEBUG", { color: "#00ff00", font: "16px Courier" });
 
-    let inp = this.input.keyboard?.addKeys(this.inputkeys);
+    //keyboard keys and events
+    if (this.input.keyboard) {
+      this.inputkeys = { activate: this.input.keyboard?.addKey(Phaser.Input.Keyboard.KeyCodes.J, true, false) };
 
-    console.log(this.inputkeys, inp);
+      let keybEvCall: MyPhaserTypes.Input.Keyboard.KeyEventCallback = () => {
+        this.enabled = !this.enabled;
+        console.log("debug -> ", this.enabled);
+      };
+
+      this.inputkeys.activate.addListener(Phaser.Input.Keyboard.Events.DOWN, keybEvCall);
+    }
 
     this.gameGraph = this.add.graphics({
       x: 0,
@@ -64,9 +90,9 @@ export class DebugScene extends sc_Hud {
 
       this.Print();
 
-      //move game graph to top if it isnt in top position.
       if (this.targetScene && this.gameGraph && this.targetScene != this) {
         if (this.gameGraph.scene != undefined) {
+          //move game graph to top if it isnt in top position.
           if (!GM.GmObj.Order.isTop(this.gameGraph)) this.targetScene.children.bringToTop(this.gameGraph);
         }
 

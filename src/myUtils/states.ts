@@ -115,10 +115,10 @@ export abstract class StateMultiClass<SubStateType extends ComplexState>
   }
 
   apply(stateObj: object): void {
-    this.StateGet().apply(stateObj);
+    this._state.apply(stateObj);
   }
   undo(stateObj: object): void {
-    this.StateGet().undo(stateObj);
+    this._state.undo(stateObj);
   }
 
   StateGet(): SubStateType {

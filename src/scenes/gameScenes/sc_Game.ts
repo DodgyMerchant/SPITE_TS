@@ -1,5 +1,5 @@
 import { CGS_TYPE } from "../../gameObj/abstract/CGS";
-import { Player } from "../../gameObj/player";
+import { Player, PlayerInput } from "../../gameObj/player";
 import { SPITEManager as GM, gameManager } from "../../main";
 import { sc_MyScene } from "../abstract/sc_MyScene";
 
@@ -17,6 +17,59 @@ import { sc_MyScene } from "../abstract/sc_MyScene";
 //     console.log("log: prop: ", prop);
 //   }
 // }
+
+//#region universal input solution WIP
+
+/**
+ * bundleed keyboard gamepad input.
+ */
+export class MyInputBundle {
+  constructor(keyboard: Phaser.Input.Keyboard.KeyboardPlugin, keyCodes: number[]) {
+    let key: number;
+    for (let i = 0; i < keyCodes.length; i++) {
+      key = keyCodes[i];
+
+      this.kkeys.push(keyboard.addKey(key, true, false));
+    }
+  }
+  /**
+   * keyboard key
+   */
+  kkeys: Phaser.Input.Keyboard.Key[] = new Array();
+
+  /**
+   * if one of the registered keys is down.
+   */
+  get isDown(): boolean{
+    let key: Phaser.Input.Keyboard.Key;
+    for (let i = 0; i < this.kkeys.length; i++) {
+      key = this.kkeys[i];
+      if (key.isDown) return true;
+    }
+    return false;
+  }
+
+  /**
+   * if all of the registered keys are up.
+   */
+  get isUp(): boolean {
+    let key: Phaser.Input.Keyboard.Key;
+    for (let i = 0; i < this.kkeys.length; i++) {
+      key = this.kkeys[i];
+      if (!key.isUp) return false;
+    }
+    return true;
+  }
+}
+
+export interface MyKeyboardInput {
+  keyboard: Phaser.Input.Keyboard.KeyboardPlugin;
+}
+export interface MyGamepadInput {
+  gamepad: Phaser.Input.Gamepad.GamepadPlugin;
+}
+
+//#endregion universal input solution WIP
 
 export default class sc_Game extends sc_MyScene {
   playerConfig: any;
@@ -612,7 +665,13 @@ export default class sc_Game extends sc_MyScene {
     // img_player_idle_stand
     // sheet_player_idle_idle
     // an_player_idle_idle
-    this.player = GM.GmObj.Add.AddnUpdate(this, new Player(this, width * 0.5, height * 0.5, "img_player_idle_stand"));
+
+    if (this.input.keyboard) {
+      this.player = GM.GmObj.Add.AddnUpdate(
+        this,
+        new Player(this, width * 0.5, height * 0.5, new PlayerInput(this.input.keyboard), "img_player_idle_stand")
+      );
+    }
   }
 
   update(time: number, delta: number): void {
@@ -631,7 +690,7 @@ export default class sc_Game extends sc_MyScene {
           "Player///////////",
           "active: " + this.player.active,
           "visible: " + this.player.visible,
-          "x/y: " + this.player.x + "/" + this.player.y,
+          "x/y: " + this.player.x.toFixed(2) + "/" + this.player.y.toFixed(2),
           "origin x/y: " + this.player.displayOriginX + "/" + this.player.displayOriginY,
           "State///////////",
           "state: " + this.player.playerState.toString(),
@@ -639,7 +698,7 @@ export default class sc_Game extends sc_MyScene {
           "Stamina//////////",
           "stam: " + this.player.stamina + " / " + this.player.stamMax,
           "tick: " + this.player._stamTick,
-          "time: " + this.player._stamTimeCount + " / " + this.player._stamTime,
+          "time: " + this.player._stamTimeCount.toFixed(2) + " / " + this.player._stamTime,
         ]);
 
         let anFr = this.player.anims.currentFrame;

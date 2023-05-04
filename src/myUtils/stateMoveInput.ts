@@ -2,9 +2,10 @@ import { WorldObject } from "../gameObj/abstract/abstract";
 import { sc_MyScene } from "../scenes/abstract/sc_MyScene";
 
 /**
- * input states
+ * Manages movment input abstractly.
+ * can be very powerfull with states.
  */
-export abstract class StateMoveInput extends WorldObject {
+export abstract class MovementInput extends WorldObject {
   /**
    *
    *
@@ -22,12 +23,12 @@ export abstract class StateMoveInput extends WorldObject {
     y: number,
     texture: string | Phaser.Textures.Texture,
     frame: string | number | undefined,
-    inputMeth?: InputFunction,
+    inputMeth?: MoveInputFunction,
     inputEnabled: boolean = true
   ) {
     super(scene, x, y, texture, frame);
 
-    if (inputMeth) this.inputMethod = inputMeth;
+    if (inputMeth) this._inputMethod = inputMeth;
     this.inputEnabled = inputEnabled;
   }
 
@@ -35,18 +36,15 @@ export abstract class StateMoveInput extends WorldObject {
    * Method called to get input for movement.
    * Use inputGet() to get input.
    */
-  private _inputMethod: InputFunction | undefined = undefined;
-  public get inputMethod(): InputFunction | undefined {
-    return this._inputMethod;
-  }
-  public set inputMethod(value: InputFunction | undefined) {
-    this._inputMethod = value;
-  }
+  private _inputMethod: MoveInputFunction | undefined = undefined;
 
   /**
    * if input enabled.
    */
   private _inputEnabled: boolean = true;
+  /**
+   *
+   */
   public get inputEnabled(): boolean {
     return this._inputEnabled;
   }
@@ -65,12 +63,15 @@ export abstract class StateMoveInput extends WorldObject {
    * Returns undefiend if input is disabled or if no input method was defind.
    * Use inputCheck to check if the input vector has received input.
    * @returns input vector or undefined if no input.
+   *
+   * This vector is saved internally and repurposed for inputs for performance.
+   * No need to save the vector.
    */
-  inputGet(): InputVector | undefined {
+  MoveInputGet(): InputVector | undefined {
     // console.log("mult: ", mult);
 
-    if (this.inputEnabled && this.inputMethod) {
-      return this.inputMethod(this._inputVector);
+    if (this.inputEnabled && this._inputMethod) {
+      return this._inputMethod(this._inputVector);
     }
     return undefined;
   }
@@ -79,21 +80,24 @@ export abstract class StateMoveInput extends WorldObject {
    * checks if the given input vector has received input.
    * @returns boolean.
    */
-  inputCheck(inputVector: InputVector | undefined): boolean {
-    if (inputVector) return inputVector.x != 0 || inputVector.y != 0;
+  MoveInputCheck(): boolean {
+    if (this._inputVector) return this._inputVector.x != 0 || this._inputVector.y != 0;
 
     return false;
   }
 }
 
+/**
+ * input vector.
+ */
 class InputVector extends Phaser.Math.Vector2 {}
 
 /**
  * Method called to get input for movement.
  */
-export type InputFunction =
+export type MoveInputFunction =
   /**
-   * @param vec2 optional vector to overwrite. Will generate new vector if undefined.
+   * @param vec2 vector to overwrite and return.
    * @returns given overwritten or new vector. vector with a limit of 1.
    */
   (vec2: Phaser.Math.Vector2) => Phaser.Math.Vector2;

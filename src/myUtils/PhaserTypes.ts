@@ -51,9 +51,40 @@ declare namespace MyPhaserTypes {
   }
 
   /**
+   * scene input system
+   */
+  namespace Input {
+    /**
+     * keyboard
+     */
+    namespace Keyboard {
+      /**
+       * non key object specific event input keyboard event callback.
+       * @see Phaser.Input.Keyboard.Events.KEY_DOWN
+       * @see Phaser.Input.Keyboard.Events.KEY_UP
+       * @see Phaser.Input.Keyboard.Events.ANY_KEY_DOWN
+       * @see Phaser.Input.Keyboard.Events.ANY_KEY_UP
+       *
+       * @param keyboardEvent html keyboard event.
+       */
+      type EventCallback = (keyboardEvent: KeyboardEvent) => void;
+
+      /**
+       * object specific event input keyboard key event callback.
+       * @see Phaser.Input.Keyboard.Events.DOWN
+       * @see Phaser.Input.Keyboard.Events.UP
+       *
+       * @param keyObject
+       * @param keyboardEvent html keyboard event.
+       */
+      type KeyEventCallback = (keyObject: Phaser.Input.Keyboard.Key, keyboardEvent: KeyboardEvent) => void;
+    }
+  }
+
+  /**
    *
    */
-  type UpdateFunc =
+  type StateUpdateFunc =
     /**
      * @param time
      * @param delta delta time in ms.

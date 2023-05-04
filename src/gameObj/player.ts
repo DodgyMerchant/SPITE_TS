@@ -3,43 +3,117 @@ import { BaseState } from "../myUtils/baseStates";
 import { ComplexState, StateClass, StateMultiClass } from "../myUtils/states";
 import MyMath from "../myUtils/MyMath";
 import { sc_MyScene } from "../scenes/abstract/sc_MyScene";
+import { MyInputBundle, MyKeyboardInput } from "../scenes/gameScenes/sc_Game";
 
-type UpdateFunc =
-  /**
-   * @param player
-   * @param fm fixed multipler to counter frame time difference.
-   * @param time
-   * @param delta delta time in ms.
-   */
-  (player: Player, fm: number, time: number, delta: number) => void;
+//#region player multi state
 
-type UpdateState = {
+/**
+ * function run every step.
+ * @param player Player Object
+ * @param fm fixed multipler to counter frame time difference.
+ * @param time
+ * @param delta delta time in ms.
+ */
+type StateUpdateFunc = (player: Player, fm: number, time: number, delta: number) => void;
+
+/**
+ * function run once on change to (apply) or from (undo) this stare.
+ * @param player Player Object
+ */
+type StateApplyFunc = (player: Player) => void;
+
+type PlayerState = ComplexState & {
   /**
    * function run every step.
    */
-  readonly stateUpdate: UpdateFunc;
+  readonly stateUpdate: StateUpdateFunc;
+  /**
+   * function run once on change to (apply) or from (undo) this stare.
+   */
+  readonly stateApply: StateUpdateFunc | undefined;
+  /**
+   * function run once on change to (apply) or from (undo) this stare.
+   */
+  readonly stateUndo: StateUpdateFunc | undefined;
+};
+
+type PlayerStateLeafConf = {
+  key: string;
+  /**
+   * name of the state.
+   */
+  name: string;
+  /**
+   * Base State applied on chant to this state.
+   */
+  baseState: BaseState;
+  /**
+   * Stamina recovery amount.
+   */
+  staminaRecovery: number;
+  /**
+   * Stamina recovery time.
+   */
+  staminaTime: number;
+  /**
+   * update run every frame.
+   */
+  stateUpdate: StateUpdateFunc;
+  /**
+   * name of the state.
+   */
+  stateApply?: StateApplyFunc;
+  /**
+   * name of the state.
+   */
+  stateUndo?: StateApplyFunc;
 };
 
 /**
  * Player complex substate for player state machine.
  */
-class PlayerStateLeaf extends StateClass implements ComplexState, UpdateState {
+class PlayerStateLeaf extends StateClass implements PlayerState {
   /**
    *
    * @param name name of the state.
-   * @param recovery Stamina recovery amount.
-   * @param time Stamina recovery time.
-   * @param stateUpdate Stamina recovery time.
+   * @param baseState Base State applied on chant to this state.
+   * @param staminaRecovery Stamina recovery amount.
+   * @param staminaTime Stamina recovery time.
+   * @param stateUpdate function run every frame.
+   * @param stateApply function run on change to this state.
+   * @param stateUndo function run on switch from this state to another.
    */
-  constructor(name: string, baseState: BaseState, recovery: number, time: number, stateUpdate: UpdateFunc) {
+  constructor(
+    name: string,
+    baseState: BaseState,
+    staminaRecovery: number,
+    staminaTime: number,
+    stateUpdate: StateUpdateFunc,
+    stateApply?: StateApplyFunc,
+    stateUndo?: StateApplyFunc
+  ) {
     super(name);
     this.baseState = baseState;
-    this.staminaRecovery = recovery;
-    this.staminaTime = time;
+    this.staminaRecovery = staminaRecovery;
+    this.staminaTime = staminaTime;
 
     this.stateUpdate = stateUpdate;
+    this.stateApply = stateApply;
+    this.stateUndo = stateUndo;
   }
-  stateUpdate: UpdateFunc;
+
+  /**
+   * function run every step.
+   */
+  stateUpdate: StateUpdateFunc;
+  /**
+   * function run once on change to (apply) or from (undo) this stare.
+   */
+  stateApply: StateApplyFunc | undefined;
+  /**
+   * function run once on change to (apply) or from (undo) this stare.
+   */
+  stateUndo: StateApplyFunc | undefined;
 
   /**
    * Base state.
@@ -58,20 +132,32 @@ class PlayerStateLeaf extends StateClass implements ComplexState, UpdateState {
     player.StateSet(this.baseState);
 
     player.StaminaSet(this.staminaRecovery, this.staminaTime);
+
+    if (this.stateApply) this.stateApply(player);
   }
-  undo(player: Player): void {}
+  undo(player: Player): void {
+    if (this.stateUndo) this.stateUndo(player);
+  }
 }
+
+type PlayerStateBranchConf = {
+  key: string;
+  name: string;
+  stateInit: string;
+  stateMap: Map<string, PlayerState>;
+  stateUpdate: StateUpdateFunc | undefined;
+};
 
 /**
  * Complex State with complex substates.
  * Must have atleast one substate.
  */
-class PlayerStateBranch extends StateMultiClass<PlayerState> implements UpdateState {
+class PlayerStateBranch extends StateMultiClass<PlayerState> implements PlayerState {
   /**
    *
    * if you specify a custom update method:
    * DO NOT FORGET to call the substates stateUpdate with "this.StateGet().stateUpdate(player, fm, time, delta);"
-   * @param name
+   * @param name name
    * @param stateInit
    * @param stateMap
    * @param stateUpdate function run every frame. Defaults to an empty method that only calls the substates update. DO NOT FORGET to call the substates stateUpdate with "this.StateGet().stateUpdate(player, fm, time, delta);"
@@ -80,7 +166,7 @@ class PlayerStateBranch extends StateMultiClass<PlayerState> implements UpdateSt
     name: string,
     stateInit: string,
     stateMap: Map<string, PlayerState>,
-    stateUpdate: UpdateFunc = (player: Player, fm: number, time: number, delta: number) => {
+    stateUpdate: StateUpdateFunc = (player: Player, fm: number, time: number, delta: number) => {
       this.StateGet().stateUpdate(player, fm, time, delta);
     }
   ) {
@@ -96,19 +182,58 @@ class PlayerStateBranch extends StateMultiClass<PlayerState> implements UpdateSt
 
     this.stateUpdate = stateUpdate;
   }
+  stateApply: StateUpdateFunc | undefined;
+  stateUndo: StateUpdateFunc | undefined;
 
   stateMap: Map<string, PlayerState>;
-  stateUpdate: UpdateFunc;
+  stateUpdate: StateUpdateFunc;
 }
 
-type PlayerState = PlayerStateLeaf | PlayerStateBranch;
+//#endregion player multi state
+//#region input
+
+export class PlayerInput implements MyKeyboardInput {
+  constructor(keyboard: Phaser.Input.Keyboard.KeyboardPlugin) {
+    this.keyboard = keyboard;
+
+    this.UP = new MyInputBundle(keyboard, [Phaser.Input.Keyboard.KeyCodes.W, Phaser.Input.Keyboard.KeyCodes.UP]);
+    this.DOWN = new MyInputBundle(keyboard, [Phaser.Input.Keyboard.KeyCodes.S, Phaser.Input.Keyboard.KeyCodes.DOWN]);
+    this.LEFT = new MyInputBundle(keyboard, [Phaser.Input.Keyboard.KeyCodes.A, Phaser.Input.Keyboard.KeyCodes.LEFT]);
+    this.RIGHT = new MyInputBundle(keyboard, [Phaser.Input.Keyboard.KeyCodes.D, Phaser.Input.Keyboard.KeyCodes.RIGHT]);
+    this.RUN = new MyInputBundle(keyboard, [Phaser.Input.Keyboard.KeyCodes.SHIFT, Phaser.Input.Keyboard.KeyCodes.ALT]);
+
+    //combat
+    ////attack
+    this.READY = new MyInputBundle(keyboard, [Phaser.Input.Keyboard.KeyCodes.K]);
+    this.SLASH = new MyInputBundle(keyboard, [Phaser.Input.Keyboard.KeyCodes.L]);
+
+    ////brace
+    this.BRACE = new MyInputBundle(keyboard, [Phaser.Input.Keyboard.KeyCodes.SHIFT]);
+  }
+
+  keyboard: Phaser.Input.Keyboard.KeyboardPlugin;
+
+  UP: MyInputBundle;
+  DOWN: MyInputBundle;
+  LEFT: MyInputBundle;
+  RIGHT: MyInputBundle;
+  RUN: MyInputBundle;
+
+  //combat
+  ////attack
+  READY: MyInputBundle;
+  SLASH: MyInputBundle;
+
+  ////brace
+  BRACE: MyInputBundle;
+}
+
+//#endregion input
 
 /**
  * player Object class
  */
 export class Player extends PBIClass {
-  playerInput: { [i: string]: Phaser.Input.Keyboard.Key } | undefined;
-
   /**
    * create a Player Object.
    * @param scene The Scene to which this Game Object belongs. A Game Object can only belong to one Scene at a time.
@@ -122,11 +247,21 @@ export class Player extends PBIClass {
     scene: sc_MyScene,
     x: number,
     y: number,
+    playerInput: PlayerInput,
     texture: string | Phaser.Textures.Texture,
     frame?: string | number | undefined,
     state: PlayerState = Player.PLAYER_STATES.IDLE
   ) {
-    super(scene, x, y, texture, frame, Player.BASE_STATES.FREE);
+    super(scene, x, y, texture, frame, Player.BASE_STATES.FREE, (vec2: Phaser.Math.Vector2) => {
+      vec2
+        .set(+this.pInput.RIGHT.isDown - +this.pInput.LEFT.isDown, +this.pInput.DOWN.isDown - +this.pInput.UP.isDown)
+        .normalize()
+        .scale(this.moveSpeed);
+
+      return vec2;
+    });
+
+    this.pInput = playerInput;
 
     //red tint
     this.setTint(this.ColorDefault);
@@ -135,19 +270,17 @@ export class Player extends PBIClass {
     this._playerState = state;
     this._playerState.apply(this);
 
-    /** keyboard input keys */
-    let keyb = this.scene.input.keyboard;
-    if (keyb)
-      this.playerInput = {
-        W: keyb.addKey("W"),
-        A: keyb.addKey("A"),
-        S: keyb.addKey("S"),
-        D: keyb.addKey("D"),
-      };
-
     // this.scene.game.
   }
 
+  //#region input
+
+  /**
+   * player input
+   */
+  pInput: PlayerInput;
+
+  //#endregion input
   //#region color
 
   /**
@@ -156,6 +289,11 @@ export class Player extends PBIClass {
   readonly ColorDefault: number = Phaser.Display.Color.GetColor(144, 11, 9);
 
   //#endregion color
+  //#region speed
+
+  moveSpeed = 0;
+
+  //#endregion speed
   //#region states
 
   private _playerState: PlayerState;
@@ -172,28 +310,57 @@ export class Player extends PBIClass {
    * Player states
    */
   static readonly PLAYER_STATES = {
-    IDLE: new PlayerStateLeaf("idle", Player.BASE_STATES.FREE, 1, 60 * 1, (player: Player, fm: number) => {
-      if (player.playerInput?.D.isDown) {
-        player.setX(player.x + 1 * fm);
-      }
-      if (player.playerInput?.A.isDown) {
-        player.setX(player.x - 1 * fm);
-      }
-      if (player.playerInput?.W.isDown) {
-        player.StaminaHit(-player.stamMax);
-      }
-    }),
-    COMBAT: new PlayerStateBranch(
-      "combat",
-      "combat_idle",
+    IDLE: new PlayerStateBranch(
+      "Idle",
+      "idle",
       new Map<string, PlayerState>([
-        ["combat_idle", new PlayerStateLeaf("free", Player.BASE_STATES.FREE, 1, 60 * 1, (player: Player, fm: number) => {})],
         [
-          "combat_attack",
+          "idle",
+          new PlayerStateLeaf(
+            "idle",
+            Player.BASE_STATES.FREE,
+            1,
+            60 * 1,
+            (p: Player, fm: number) => {
+              if (p.pInput.RUN.isDown) {
+                console.log("run?");
+              }
+            },
+            (p: Player) => {
+              p.moveSpeed = 0.1;
+            }
+          ),
+        ],
+        [
+          "run",
+          new PlayerStateLeaf(
+            "run",
+            Player.BASE_STATES.FREE,
+            -0.5,
+            0,
+            (p: Player, fm: number) => {},
+            (p: Player) => {
+              p.moveSpeed = 0.25;
+            }
+          ),
+        ],
+      ])
+    ),
+    COMBAT: new PlayerStateBranch(
+      "Combat",
+      "idle",
+      new Map<string, PlayerState>([
+        ["idle", new PlayerStateLeaf("idle", Player.BASE_STATES.FREE, 1, 60 * 1, (p: Player, fm: number) => {})],
+        [
+          "attack",
           new PlayerStateBranch(
-            "test",
-            "test1",
-            new Map([["test1", new PlayerStateLeaf("1", Player.BASE_STATES.FREE, 1, 60 * 1, (player: Player, fm: number) => {})]])
+            "attack",
+            "ready",
+            new Map([
+              ["ready", new PlayerStateLeaf("ready", Player.BASE_STATES.FREE, 1, 60 * 1, (p: Player, fm: number) => {})],
+              ["hold", new PlayerStateLeaf("hold", Player.BASE_STATES.FREE, 1, 60 * 1, (p: Player, fm: number) => {})],
+              ["slash", new PlayerStateLeaf("slash", Player.BASE_STATES.FREE, 1, 60 * 1, (p: Player, fm: number) => {})],
+            ])
           ),
         ],
       ])
