@@ -1,4 +1,5 @@
 import { SPITEManager as GM } from "../main";
+import { MyPhaserTypes } from "../myUtils/PhaserTypes";
 import sc_Hud from "./abstract/sc_HUD";
 
 export type DebugActivated = {

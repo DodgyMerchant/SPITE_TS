@@ -1,7 +1,7 @@
 /**
  * My custom phasertypes
  */
-declare namespace MyPhaserTypes {
+export declare namespace MyPhaserTypes {
   /**
    * animation stuff
    */
@@ -80,5 +80,4 @@ declare namespace MyPhaserTypes {
       type KeyEventCallback = (keyObject: Phaser.Input.Keyboard.Key, keyboardEvent: KeyboardEvent) => void;
     }
   }
-
 }

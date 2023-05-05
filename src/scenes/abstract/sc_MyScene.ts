@@ -51,7 +51,7 @@ export abstract class sc_MyScene extends Phaser.Scene implements DebugActivated 
     // console.log(this.events.eventNames());
   }
 
-  update(time: number, delta: number): void {
+  update(_time: number, delta: number): void {
     //#region debug
     if (this.DEBUG.enabled) {
       var pointer = this.input.activePointer;

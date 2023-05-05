@@ -90,7 +90,6 @@ class PlayerStateLeaf extends StateClass implements NestedStateInterface<string,
    * @param stateUndo function run on switch from this state to another.
    */
   constructor(
-    parent: PlayerStateBranch | undefined,
     name: string,
     baseState: BaseState,
     staminaRecovery: number,
@@ -107,8 +106,6 @@ class PlayerStateLeaf extends StateClass implements NestedStateInterface<string,
     this.stateUpdate = stateUpdate;
     this.stateApply = stateApply;
     this.stateUndo = stateUndo;
-
-    this.parent = parent;
   }
   parent: PlayerStateBranch | undefined;
 
@@ -177,14 +174,12 @@ class PlayerStateBranch
    *
    * if you specify a custom update method:
    * DO NOT FORGET to call the substates stateUpdate with "this.StateGet().stateUpdate(player, fm, time, delta);"
-   * @param parent parent object refrence
    * @param name name
    * @param stateInit
    * @param stateList
-   * @param stateUpdate function run every frame. Defaults to an empty method that only calls the substates update. DO NOT FORGET to call the substates stateUpdate with "this.StateGet().stateUpdate(player, fm, time, delta);"
+   * @param stateUpdate function run every frame. Defaults to an empty method that only calls the substates update. DO NOT FORGET to call the substates stateUpdate with "let state = this.StateGet(); state.stateUpdate(state, fm, time, delta);"
    */
   constructor(
-    parent: PlayerStateBranch | undefined,
     name: string,
     stateInit: string,
     stateList: (PlayerStateLeafConf | PlayerStateBranchConf)[],
@@ -209,7 +204,6 @@ class PlayerStateBranch
         stateMap.set(
           conf.key,
           new PlayerStateLeaf(
-            undefined,
             conf.name,
             conf.baseState,
             conf.staminaRecovery,
@@ -221,7 +215,7 @@ class PlayerStateBranch
         );
       } else {
         //is branch
-        stateMap.set(conf.key, new PlayerStateBranch(undefined, conf.name, conf.stateInit, conf.stateList, conf.stateUpdate));
+        stateMap.set(conf.key, new PlayerStateBranch(conf.name, conf.stateInit, conf.stateList, conf.stateUpdate));
       }
     }
 
@@ -239,8 +233,6 @@ class PlayerStateBranch
     this.stateMap = stateMap;
 
     this.stateUpdate = stateUpdate;
-
-    this.parent = parent;
   }
   stateMap: Map<string, PlayerState>;
   stateApply: StateUpdateFunc | undefined;
@@ -508,7 +500,7 @@ export class Player extends PBIClass implements MultiStateInterface<string>, Roo
   /**
    * The stamina systems update method.
    */
-  StaminaUpdate(time: number, delta: number) {
+  StaminaUpdate(_time: number, delta: number) {
     let _fm = this.FixedMult(delta);
     if (this._stamTick != 0) {
       //if stamina was hit (resets stamina time) and tick is positive (stamina is recovering)
@@ -602,7 +594,7 @@ export class Player extends PBIClass implements MultiStateInterface<string>, Roo
     //IDLE
     [
       PLAYER_STATES.IDLE,
-      new PlayerStateBranch(undefined, "IDLE", "idle", [
+      new PlayerStateBranch("IDLE", "idle", [
         //idle idle
         {
           key: "idle",
@@ -616,7 +608,8 @@ export class Player extends PBIClass implements MultiStateInterface<string>, Roo
               state.parent?.MultiStateSwitch(this, "idle", "run");
             }
           },
-          stateApply: (state: PlayerState) => {
+          stateApply: (_state: PlayerState) => {
+            this.play("an_player_idle_idle");
             this.moveSpeed = 0.1;
           },
         },
@@ -627,7 +620,7 @@ export class Player extends PBIClass implements MultiStateInterface<string>, Roo
           baseState: Player.BASE_STATES.FREE,
           staminaRecovery: -(this.stamMax / (gameManager.FPS_Target * 3)),
           staminaTime: 0,
-          stateUpdate: (state: PlayerState, fm: number) => {
+          stateUpdate: (state: PlayerState, _fm: number) => {
             if (this.pInput.RUN.isUp) {
               state.parent?.MultiStateSwitch(this, "run", "idle");
             }
@@ -635,7 +628,7 @@ export class Player extends PBIClass implements MultiStateInterface<string>, Roo
               state.parent?.MultiStateSwitch(this, PLAYER_STATES.IDLE, PLAYER_STATES.EXHAUSTED);
             }
           },
-          stateApply: (state: PlayerState) => {
+          stateApply: (_state: PlayerState) => {
             this.moveSpeed = 0.25;
           },
         },
@@ -645,7 +638,6 @@ export class Player extends PBIClass implements MultiStateInterface<string>, Roo
     [
       PLAYER_STATES.EXHAUSTED,
       new PlayerStateLeaf(
-        undefined,
         "exhausted",
         Player.BASE_STATES.FROZEN,
 

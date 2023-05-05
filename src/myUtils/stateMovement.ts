@@ -80,7 +80,7 @@ export abstract class StateMovement extends MovementInput {
     return this.moveEnabled && !this.moveStopped;
   }
 
-  update(time: number, delta: number) {
+  update(_time: number, delta: number) {
     if (this.MoveCheck()) {
       //get input
       let vec2 = this.MoveInputGet();

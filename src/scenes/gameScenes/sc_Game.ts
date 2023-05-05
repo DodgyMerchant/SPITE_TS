@@ -40,7 +40,7 @@ export class MyInputBundle {
   /**
    * if one of the registered keys is down.
    */
-  get isDown(): boolean{
+  get isDown(): boolean {
     let key: Phaser.Input.Keyboard.Key;
     for (let i = 0; i < this.kkeys.length; i++) {
       key = this.kkeys[i];
@@ -92,8 +92,7 @@ export default class sc_Game extends sc_MyScene {
      * yoyos one time :D
      */
 
-    this.load.setPath("src/assets/");
-    // this.load.image("mapImg", "assets/mapImg.png");
+    this.load.setPath("../../../public/assets/");
 
     this.load.image("img_player_idle_stand", "player/idle/img_player_idle_stand.png");
 

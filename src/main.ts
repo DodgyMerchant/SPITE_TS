@@ -182,7 +182,7 @@ export class SPITEManager extends GameManager implements PBIManager, CGSManager 
         .spritesheet(spriteSheetConfig)
         .on(
           "filecomplete-spritesheet-" + spriteSheetConfig.key,
-          (fileKey: string, dataType: string, TextureObject: Phaser.Textures.Texture) => {
+          (fileKey: string, _dataType: string, _TextureObject: Phaser.Textures.Texture) => {
             //setting frames
             if (frameConfig) animationConfig.frames = scene.anims.generateFrameNumbers(fileKey, frameConfig);
             else animationConfig.frames = fileKey;

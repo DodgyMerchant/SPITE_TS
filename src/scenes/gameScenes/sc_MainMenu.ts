@@ -22,7 +22,7 @@ export default class sc_MainMenu extends sc_MyScene {
     this.scene.start(GM.Scene.UniqueAdd(this.scene, sc_Game) ?? undefined);
   }
 
-  update(time: number, delta: number): void {
+  update(_time: number, _delta: number): void {
     console.log("sc_MainMenu update");
   }
 }

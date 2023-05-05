@@ -1,4 +1,4 @@
-import { SPITEManager as GM } from "../../main";
+
 import { GameManager } from "../../myUtils/gameManager";
 
 /**

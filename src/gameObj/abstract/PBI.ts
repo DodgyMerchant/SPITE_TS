@@ -1,3 +1,4 @@
+import { MyPhaserTypes } from "../../myUtils/PhaserTypes";
 import { BaseState, BaseStateClass } from "../../myUtils/baseStates";
 import { MoveInputFunction } from "../../myUtils/stateMoveInput";
 import { sc_MyScene } from "../../scenes/abstract/sc_MyScene";
@@ -41,9 +42,9 @@ export class PBIClass extends BaseStateClass {
     super(scene, x, y, texture, frame, state, inputMeth);
 
     let call: MyPhaserTypes.Animation.GeneralCallback = (
-      anim: Phaser.Animations.Animation,
-      frame: Phaser.Animations.AnimationFrame,
-      gameObject: Phaser.GameObjects.Sprite,
+      _anim: Phaser.Animations.Animation,
+      _frame: Phaser.Animations.AnimationFrame,
+      _gameObject: Phaser.GameObjects.Sprite,
       frameKey: String
     ) => {
       // console.log("complete", anim, frame, gameObject, frameKey);
