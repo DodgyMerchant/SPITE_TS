@@ -12,18 +12,18 @@ export type SimpleState = {
   toString(): string;
 };
 
-export type ComplexState = SimpleState & {
+export type ComplexState<AppliedType extends object> = SimpleState & {
   /**
    * apply state properties to object.
    * @param stateObj state object to apply states to.
    */
-  apply(stateObj: object): void;
+  apply(stateObj: AppliedType): void;
 
   /**
    * disable/undo state changes.
    * @param stateObj state object to unapply states to.
    */
-  undo(stateObj: object): void;
+  undo(stateObj: AppliedType): void;
 };
 
 /**
@@ -129,7 +129,7 @@ export interface MultiStateInterface<IndexType> {
 /**
  * state that runs an update every step, apply and undo.
  */
-export interface ActiveComplexState extends ComplexState {
+export interface ActiveComplexState<AppliedType extends object> extends ComplexState<AppliedType> {
   /**
    * function run every step.
    */
@@ -137,20 +137,20 @@ export interface ActiveComplexState extends ComplexState {
   /**
    * function run once on change to (apply) or from (undo) this stare.
    */
-  stateApply: Function | undefined;
+  stateApply?: Function;
   /**
    * function run once on change to (apply) or from (undo) this stare.
    */
-  stateUndo: Function | undefined;
+  stateUndo?: Function;
 }
 
 /**
  * A state that has a substate.
  * Wich is in itself a multi state or a complex state.
  */
-export abstract class StateMultiClass<SubStateType extends ComplexState>
+export abstract class StateMultiClass<AppliedType extends object, SubStateType extends ComplexState<AppliedType>>
   extends StateClass
-  implements StateComplexObject<SubStateType>, ComplexState
+  implements StateComplexObject<SubStateType>, ComplexState<AppliedType>
 {
   /**
    * Current sub state.
@@ -168,17 +168,17 @@ export abstract class StateMultiClass<SubStateType extends ComplexState>
     this._state = state;
   }
 
-  apply(stateObj: object): void {
+  apply(stateObj: AppliedType): void {
     this._state.apply(stateObj);
   }
-  undo(stateObj: object): void {
+  undo(stateObj: AppliedType): void {
     this._state.undo(stateObj);
   }
 
   StateGet(): SubStateType {
     return this._state;
   }
-  StateSet(stateObj: object, newSubState: SubStateType): void {
+  StateSet(stateObj: AppliedType, newSubState: SubStateType): void {
     this._state.undo(stateObj);
     this._state = newSubState;
     this._state.apply(stateObj);

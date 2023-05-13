@@ -3,7 +3,7 @@ import { MoveInputFunction } from "./stateMoveInput";
 import { StateMovement } from "./stateMovement";
 import { ComplexState, StateObject } from "./states";
 
-export class BaseState implements ComplexState {
+export class BaseState implements ComplexState<BaseStateClass> {
   readonly name: string;
   /**
    * if input enabled.
@@ -32,13 +32,13 @@ export class BaseState implements ComplexState {
     this.stopped = stopped;
   }
 
-  apply<T extends BaseStateClass>(stateObj: T) {
+  apply(stateObj: BaseStateClass) {
     stateObj.moveEnabled = this.input;
     stateObj.inputEnabled = this.move;
     stateObj.moveStopped = this.stopped;
   }
 
-  undo<T extends BaseStateClass>(stateObj: T) {
+  undo(stateObj: BaseStateClass) {
     if (stateObj.moveEnabled) return;
     // stateObj.moveEnabled = this.input;
     // stateObj.inputEnabled = this.move;

@@ -92,10 +92,9 @@ export default class sc_Game extends sc_MyScene {
      * yoyos one time :D
      */
 
-    this.load.setPath("../../../public/assets/");
+    this.load.setPath("../../../assets/");
 
     this.load.image("img_player_idle_stand", "player/idle/img_player_idle_stand.png");
-
     GM.Load.OmegaStip(this, gameManager, gameManager, "sheet_", "an_", [
       /*
       pingpong: 

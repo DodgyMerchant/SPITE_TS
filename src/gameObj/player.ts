@@ -17,12 +17,12 @@ import { gameManager } from "../main";
 
 /**
  * function run every step.
- * @param nextState next state up the chain. THIS state the function is belongs to.
+ * @param thisState THIS state the function is belongs to.
  * @param fm fixed multipler to counter frame time difference.
  * @param time
  * @param delta delta time in ms.
  */
-type StateUpdateFunc = (nextState: PlayerState, fm: number, time: number, delta: number) => void;
+type StateLeafUpdateFunc = (thisState: PlayerState, fm: number, time: number, delta: number) => void;
 
 /**
  * function run once on change to (apply) or from (undo) this stare.
@@ -30,58 +30,77 @@ type StateUpdateFunc = (nextState: PlayerState, fm: number, time: number, delta:
  */
 type StateApplyFunc = (nextState: PlayerState) => void;
 
-type PlayerStateLeafConf = {
-  /*
-  key: ,
-  name: ,
-  baseState: ,
-  staminaRecovery: ,
-  staminaTime: ,
-  stateUpdate: ,
-  stateApply?: ,
-  stateUndo?: ,
-  */
-  /**
-   *
-   */
-  key: string;
-  /**
-   * name of the state.
-   */
-  name: string;
-  /**
-   * Base State applied on chant to this state.
-   */
-  baseState: BaseState;
-  /**
-   * Stamina recovery amount.
-   */
-  staminaRecovery: number;
-  /**
-   * Stamina recovery time.
-   */
-  staminaTime: number;
-  /**
-   * update run every frame.
-   */
-  stateUpdate: StateUpdateFunc;
-  /**
-   * name of the state.
-   */
-  stateApply?: StateApplyFunc;
-  /**
-   * name of the state.
-   */
-  stateUndo?: StateApplyFunc;
-};
+// state configs | not needed atm.
+// type PlayerStateLeafConf = {
+//   /*
+//   key: ,
+//   name: ,
+//   baseState: ,
+//   staminaRecovery: ,
+//   staminaTime: ,
+//   stateUpdate: ,
+//   stateApply?: ,
+//   stateUndo?: ,
+//   */
+//   /**
+//    *
+//    */
+//   key: string;
+//   /**
+//    * name of the state.
+//    */
+//   name: string;
+//   /**
+//    * Base State applied on chant to this state.
+//    */
+//   baseState: BaseState;
+//   /**
+//    * Stamina recovery amount.
+//    */
+//   staminaRecovery: number;
+//   /**
+//    * Stamina recovery time.
+//    */
+//   staminaTime: number;
+//   /**
+//    * update run every frame.
+//    */
+//   stateUpdate: StateLeafUpdateFunc;
+//   /**
+//    * name of the state.
+//    */
+//   stateApply?: StateApplyFunc;
+//   /**
+//    * name of the state.
+//    */
+//   stateUndo?: StateApplyFunc;
+// };
+
+// type PlayerStateBranchConf = {
+//   /*
+//   key: ,
+//   name: ,
+//   stateInit: ,
+//   stateMap: ,
+//   stateUpdate: ,
+//   */
+//   key: string;
+//   name: string;
+//   stateInit: string;
+//   stateList: (PlayerStateLeafConf | PlayerStateBranchConf)[];
+//   stateUpdate: StateLeafUpdateFunc | undefined;
+// };
 
 /**
  * Player complex substate for player state machine.
  */
-class PlayerStateLeaf extends StateClass implements NestedStateInterface<string, PlayerStateBranch>, ActiveComplexState {
+class PlayerStateLeaf
+  extends StateClass
+  implements NestedStateInterface<string, MultiStateInterface<string>>, ActiveComplexState<Player>
+{
   /**
    *
-   * @param name name of the state.
+   * @param name name of the leaf state. Will be used as the enum key.
    * @param baseState Base State applied on chant to this state.
    * @param staminaRecovery Stamina recovery amount.
    * @param staminaTime Stamina recovery time.
@@ -94,7 +113,7 @@ class PlayerStateLeaf extends StateClass implements NestedStateInterface<string,
     baseState: BaseState,
     staminaRecovery: number,
     staminaTime: number,
-    stateUpdate: StateUpdateFunc,
+    stateUpdate: StateLeafUpdateFunc,
     stateApply?: StateApplyFunc,
     stateUndo?: StateApplyFunc
   ) {
@@ -107,12 +126,13 @@ class PlayerStateLeaf extends StateClass implements NestedStateInterface<string,
     this.stateApply = stateApply;
     this.stateUndo = stateUndo;
   }
-  parent: PlayerStateBranch | undefined;
+
+  parent: MultiStateInterface<string> | undefined;
 
   /**
    * function run every step.
    */
-  stateUpdate: StateUpdateFunc;
+  stateUpdate: StateLeafUpdateFunc;
   /**
    * function run once on change to (apply) or from (undo) this stare.
    */
@@ -147,49 +167,40 @@ class PlayerStateLeaf extends StateClass implements NestedStateInterface<string,
   }
 }
 
-type PlayerStateBranchConf = {
-  /*
-  key: ,
-  name: ,
-  stateInit: ,
-  stateMap: ,
-  stateUpdate: ,
-  */
-  key: string;
-  name: string;
-  stateInit: string;
-  stateList: (PlayerStateLeafConf | PlayerStateBranchConf)[];
-  stateUpdate: StateUpdateFunc | undefined;
-};
-
 /**
  * Complex State with complex substates.
  * Must have atleast one substate.
  */
-class PlayerStateBranch
-  extends StateMultiClass<PlayerState>
-  implements NestedStateInterface<string, MultiStateInterface<string>>, MultiStateInterface<string>
+class PlayerStateBranch<ChildType extends ActiveComplexState<Player>>
+  extends StateMultiClass<Player, PlayerState>
+  implements NestedStateInterface<string, MultiStateInterface<string>>, MultiStateInterface<string>, ActiveComplexState<Player>
 {
   /**
    *
    * if you specify a custom update method:
    * DO NOT FORGET to call the substates stateUpdate with "this.StateGet().stateUpdate(player, fm, time, delta);"
-   * @param name name
+   * @param name name of the branch state, will be used as the enum key.
    * @param stateInit
    * @param stateList
-   * @param stateUpdate function run every frame. Defaults to an empty method that only calls the substates update. DO NOT FORGET to call the substates stateUpdate with "let state = this.StateGet(); state.stateUpdate(state, fm, time, delta);"
+   * @param stateUpdate function run every frame. Defaults to an empty method that only calls the substates update. DO NOT FORGET to call the substates stateUpdate with "let nextState = this.StateGet(); nextState.stateUpdate(nextState, fm, time, delta);"
+   * @param stateApply function run on change to this state.
+   * @param stateUndo function run on switch from this state to another.
    */
   constructor(
     name: string,
     stateInit: string,
-    stateList: (PlayerStateLeafConf | PlayerStateBranchConf)[],
-    stateUpdate: StateUpdateFunc = (_nextState: PlayerState, fm: number, time: number, delta: number) => {
-      let state = this.StateGet();
-      state.stateUpdate(state, fm, time, delta);
-    }
+    // stateList: (PlayerStateLeafConf | PlayerStateBranchConf)[],
+    stateList: ChildType[],
+    stateUpdate: StateLeafUpdateFunc = (_thisState: PlayerState, fm: number, time: number, delta: number) => {
+      let nextState = this.StateGet();
+      nextState.stateUpdate(nextState, fm, time, delta);
+    },
+    stateApply?: StateApplyFunc,
+    stateUndo?: StateApplyFunc
   ) {
-    // super(name, stateMap.get(stateInit) ?? new PlayerStateLeaf("ERROR", Player.BASE_STATES.FROZEN, 0, 0, () => {}));
+    let stateMap = new Map<string, PlayerState>();
 
+    /*//CONFIG | create sub states from configs | uncommended to ti remove config creation for objects.
     let stateMap = new Map<string, PlayerState>();
     let confLeafCheck = function (conf: PlayerStateLeafConf | PlayerStateBranchConf): conf is PlayerStateLeafConf {
       return (<PlayerStateLeafConf>conf).baseState !== undefined;
@@ -218,6 +229,15 @@ class PlayerStateBranch
         stateMap.set(conf.key, new PlayerStateBranch(conf.name, conf.stateInit, conf.stateList, conf.stateUpdate));
       }
     }
+    //*/
+
+    //object list to map
+    let state;
+    for (let i = 0; i < stateList.length; i++) {
+      state = stateList[i];
+
+      stateMap.set(state.name, state);
+    }
 
     //get default state
     let s = stateMap.get(stateInit);
@@ -233,14 +253,16 @@ class PlayerStateBranch
     this.stateMap = stateMap;
 
     this.stateUpdate = stateUpdate;
+    this.stateApply = stateApply;
+    this.stateUndo = stateUndo;
   }
+
+  stateUpdate: StateLeafUpdateFunc;
   stateMap: Map<string, PlayerState>;
-  stateApply: StateUpdateFunc | undefined;
-  stateUndo: StateUpdateFunc | undefined;
-  stateUpdate: StateUpdateFunc;
+  stateApply: StateApplyFunc | undefined;
+  stateUndo: StateApplyFunc | undefined;
 
   MultiStateSwitch(player: Player, fromState: string, toState: string): boolean {
-    console.log(this);
     if (this.stateMap.has(fromState)) {
       let state = this.stateMap.get(toState);
 
@@ -257,10 +279,34 @@ class PlayerStateBranch
     return false;
   }
 
-  parent: PlayerStateBranch | Player | undefined;
+  parent: MultiStateInterface<string> | undefined;
+
+  /**
+   * @override additionally sets the substates parent property to self.
+   * @param stateObj
+   * @param newSubState
+   */
+  StateSet(stateObj: Player, newSubState: PlayerState): void {
+    super.StateSet(stateObj, newSubState);
+
+    console.log("Substate set - parent:", this, "sub:", newSubState);
+    newSubState.parent = this;
+  }
+
+  apply(player: Player): void {
+    if (this.stateApply) this.stateApply(this);
+
+    super.apply(player);
+  }
+
+  undo(player: Player): void {
+    if (this.stateUndo) this.stateUndo(this);
+
+    super.undo(player);
+  }
 }
 
-type PlayerState = PlayerStateBranch | PlayerStateLeaf;
+type PlayerState = PlayerStateBranch<ActiveComplexState<Player>> | PlayerStateLeaf;
 
 //#endregion player multi state
 //#region input
@@ -594,53 +640,61 @@ export class Player extends PBIClass implements MultiStateInterface<string>, Roo
     //IDLE
     [
       PLAYER_STATES.IDLE,
-      new PlayerStateBranch("IDLE", "idle", [
-        //idle idle
-        {
-          key: "idle",
-          name: "idle",
-          baseState: Player.BASE_STATES.FREE,
-          staminaRecovery: 1,
-          staminaTime: gameManager.FPS_Target * 1,
-          stateUpdate: (state: PlayerState, _fm: number) => {
-            //run input switch to run state
-            if (this.pInput.RUN.isDown) {
-              state.parent?.MultiStateSwitch(this, "idle", "run");
+      new PlayerStateBranch(
+        PLAYER_STATES.IDLE,
+        "idle",
+        [
+          //
+          //#region idle idle
+          new PlayerStateLeaf(
+            "idle",
+            Player.BASE_STATES.FREE,
+            1,
+            gameManager.FPS_Target * 1,
+            (state: PlayerState, _fm: number) => {
+              //run input switch to run state
+              if (this.pInput.RUN.isDown) {
+                state.parent?.MultiStateSwitch(this, "idle", "run");
+              }
+            },
+            (_state: PlayerState) => {
+              this.play("an_player_idle_idle");
+              this.moveSpeed = 0.1;
             }
-          },
-          stateApply: (_state: PlayerState) => {
-            this.play("an_player_idle_idle");
-            this.moveSpeed = 0.1;
-          },
-        },
-        //idle run
-        {
-          key: "run",
-          name: "run",
-          baseState: Player.BASE_STATES.FREE,
-          staminaRecovery: -(this.stamMax / (gameManager.FPS_Target * 3)),
-          staminaTime: 0,
-          stateUpdate: (state: PlayerState, _fm: number) => {
-            if (this.pInput.RUN.isUp) {
-              state.parent?.MultiStateSwitch(this, "run", "idle");
+          ),
+          //#endregion idle idle
+          //#region idle run
+          new PlayerStateLeaf(
+            "run",
+            Player.BASE_STATES.FREE,
+            -(this.stamMax / (gameManager.FPS_Target * 3)),
+            0,
+            (state: PlayerState, _fm: number) => {
+              if (this.pInput.RUN.isUp) {
+                state.parent?.MultiStateSwitch(this, "run", "idle");
+              }
+              if (this.staminaEmpty) {
+                state.parent?.MultiStateSwitch(this, PLAYER_STATES.IDLE, PLAYER_STATES.EXHAUSTED);
+              }
+            },
+            (_state: PlayerState) => {
+              this.moveSpeed = 0.25;
             }
-            if (this.staminaEmpty) {
-              state.parent?.MultiStateSwitch(this, PLAYER_STATES.IDLE, PLAYER_STATES.EXHAUSTED);
-            }
-          },
-          stateApply: (_state: PlayerState) => {
-            this.moveSpeed = 0.25;
-          },
-        },
-      ]),
+          ),
+          //#endregion idle run
+        ],
+        (thisState: PlayerState, fm: number, time: number, delta: number) => {
+          let nextState = thisState.StateGet();
+          nextState.stateUpdate(nextState, fm, time, delta);
+        }
+      ),
     ],
     //EXHAUSTED
     [
       PLAYER_STATES.EXHAUSTED,
       new PlayerStateLeaf(
-        "exhausted",
+        PLAYER_STATES.EXHAUSTED,
         Player.BASE_STATES.FROZEN,
-
         this.stamMax / (gameManager.FPS_Target * 5),
         0,
         (state) => {
